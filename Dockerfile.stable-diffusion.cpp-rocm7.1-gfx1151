@@ -1,0 +1,20 @@
+FROM docker.io/getterup/fedora-rocm7.1:latest AS builder
+# vim: filetype=dockerfile
+
+ARG GFX_NAME=gfx1151
+
+ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
+
+RUN git clone https://github.com/leejet/stable-diffusion.cpp /stable-diffusion.cpp
+WORKDIR /stable-diffusion.cpp
+
+
+RUN mkdir -p build && cd build && \
+    cmake .. -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DSD_HIPBLAS=ON -DCMAKE_BUILD_TYPE=Release -DGPU_TARGETS=$GFX_NAME -DAMDGPU_TARGETS=$GFX_NAME -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
+    cmake --build . --config Release
+
+ENV LD_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm
+ENV OLLAMA_HOST=0.0.0.0:11434
+EXPOSE 11434
+ENTRYPOINT ["/bin/ollama"]
+CMD ["serve"]
