@@ -34,7 +34,9 @@ RUN cp /stable-diffusion.cpp/build/bin/sd /sd-webui/sd
 
 # Install Python dependencies in builder stage where we have all the tools
 WORKDIR /sd-webui
-RUN dnf install -y python3.13 python3-pip gcc gcc-c++ && \
+RUN dnf install -y python3.13 gcc gcc-c++ && \
+    wget https://bootstrap.pypa.io/get-pip.py && \
+    python3.13 get-pip.py && \
     python3.13 -m pip install --no-cache-dir -r requirements.txt
 
 # Make the launch script executable
