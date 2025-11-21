@@ -14,7 +14,7 @@ services:
       - video
     environment:
       - OLLAMA_VULKAN=0
-      - OLLAMA_DEBUG=1
+      - OLLAMA_DEBUG=2
       - OLLAMA_FLASH_ATTENTION=true
       - HSA_ENABLE_SDMA=0
       - OLLAMA_KEEP_ALIVE=-1
