@@ -17,12 +17,11 @@ services:
       - OLLAMA_DEBUG=1
       - OLLAMA_FLASH_ATTENTION=true
       - HSA_ENABLE_SDMA=0
-      - HSA_OVERRIDE_GFX_VERSION="11.5.1"
-      - OLLAMA_KEEP_ALIVE=-1 
-      - OLLAMA_MAX_LOADED_MODELS=1 
-      - OLLAMA_FLASH_ATTENTION=1 
+      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_FLASH_ATTENTION=1
       - OLLAMA_GPU_OVERHEAD=0
-      - OLLAM_KEEP_ALIVE=1h
+      - OLLAMA_KEEP_ALIVE=1h
     restart: unless-stopped
     cap_add:
       - SYS_PTRACE
