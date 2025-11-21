@@ -167,7 +167,7 @@ For multi-GPU systems, specify the preferred device:
 rocminfo
 
 # Set specific GPU
-export ROCR_VISIBLE_DEVICES=GPU-67fb8788eb4041db
+export ROCR_VISIBLE_DEVICES=0
 ```
 
 ### Memory Optimization
