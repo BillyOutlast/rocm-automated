@@ -34,8 +34,8 @@ RUN cp /stable-diffusion.cpp/build/bin/sd /sd-webui/sd
 
 # Install Python dependencies in builder stage where we have all the tools
 WORKDIR /sd-webui
-RUN dnf install -y python3 python3-pip gcc gcc-c++ && \
-    pip3 install --no-cache-dir -r requirements.txt
+RUN dnf install -y python3.13 python3.13-pip gcc gcc-c++ && \
+    python3.13 -m pip install --no-cache-dir -r requirements.txt
 
 # Make the launch script executable
 RUN chmod +x sdcpp_webui.sh
@@ -61,7 +61,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     install \
       rocm-runtime rocm-device-libs hip-runtime-amd \
       rocblas hipblas rocminfo \
-      python3 python3-pip \
+      python3.13 python3.13-pip \
       ca-certificates \
       bash \
  && dnf clean all && rm -rf /var/cache/dnf/*
@@ -79,7 +79,7 @@ ENV ROCM_PATH=/opt/rocm \
 
 # Copy the complete sd-webui with the binary and installed dependencies
 COPY --from=builder /sd-webui /app/
-COPY --from=builder /usr/local/lib/python3.*/site-packages /usr/local/lib/python3.14/site-packages/
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages/
 COPY --from=builder /usr/local/bin /usr/local/bin/
 
 # Set up library paths and working directory
@@ -118,7 +118,7 @@ else\n\
 fi\n\
 \n\
 echo "Starting Stable Diffusion WebUI using official launch script..."\n\
-exec ./sdcpp_webui.sh --autostart' > /usr/local/bin/docker-entrypoint.sh \
+exec python3.13 -c "import sys; exec(open(\"./sdcpp_webui.sh\").read())" || exec ./sdcpp_webui.sh --autostart' > /usr/local/bin/docker-entrypoint.sh \
     && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
