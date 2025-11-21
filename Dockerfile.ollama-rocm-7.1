@@ -68,12 +68,7 @@ COPY --from=builder /bin/ollama /usr/bin/ollama
 COPY --from=builder /tmp/ollama-src/dist/lib/ollama /usr/lib/ollama
 
 # Set up library paths and environment
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH \
-    OLLAMA_HOST=0.0.0.0:11434 \
-    OLLAMA_KEEP_ALIVE=-1 \
-    OLLAMA_MAX_LOADED_MODELS=1 \
-    OLLAMA_FLASH_ATTENTION=1 \
-    OLLAMA_GPU_OVERHEAD=0
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH 
 
 # Expose port
 EXPOSE 11434
