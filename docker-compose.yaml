@@ -1,8 +1,6 @@
 services:
   ollama:
-    build:
-      context: .
-      dockerfile: Dockerfile.ollama-rocm-7
+    image: docker.io/getterup/ollama-rocm7.1:latest
     container_name: ollama
     ports:
       - "11434:11434"
