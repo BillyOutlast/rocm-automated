@@ -21,3 +21,22 @@ services:
     security_opt:
       - seccomp=unconfined
       - label=disable
+  stable-diffusion.cpp:
+    image: docker.io/getterup/stable-diffusion.cpp-rocm7.1-gfx1151:latest
+    container_name: stable-diffusion.cpp
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./stable-diffusion.cpp:/stable-diffusion.cpp:Z
+      - /etc/resolv.conf:/etc/resolv.conf:ro
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION="11.5.1"
+    restart: unless-stopped
+    security_opt:
+      - seccomp=unconfined
+      - label=disable
