@@ -5,19 +5,116 @@ ARG GFX_NAME=gfx1151
 
 ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
 
+# Clone and build stable-diffusion.cpp
 RUN git clone https://github.com/leejet/stable-diffusion.cpp /stable-diffusion.cpp
 WORKDIR /stable-diffusion.cpp
 RUN git pull origin master && \
     git submodule init && \
     git submodule update
 
-
 RUN mkdir -p build && cd build && \
-    cmake .. -G "Ninja" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DSD_HIPBLAS=ON -DCMAKE_BUILD_TYPE=Release -DGPU_TARGETS=$GFX_NAME -DAMDGPU_TARGETS=$GFX_NAME -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
+    cmake .. -G "Ninja" \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DSD_HIPBLAS=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DGPU_TARGETS=$GFX_NAME \
+        -DAMDGPU_TARGETS=$GFX_NAME \
+        -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
     cmake --build . --config Release
 
-ENV LD_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm
-ENV OLLAMA_HOST=0.0.0.0:11434
-EXPOSE 11434
-ENTRYPOINT ["/bin/ollama"]
-CMD ["serve"]
+# Clone sd.cpp-webui and place the binary in its folder as per instructions
+WORKDIR /
+RUN git clone https://github.com/daniandtheweb/sd.cpp-webui.git /sd-webui
+WORKDIR /sd-webui
+
+# Copy the compiled sd binary to the webui folder as required
+RUN cp /stable-diffusion.cpp/build/bin/sd /sd-webui/sd
+
+# Make the launch script executable
+RUN chmod +x sdcpp_webui.sh
+
+# Runtime stage
+FROM registry.fedoraproject.org/fedora:43 AS runtime
+
+# Install ROCm runtime and Python
+RUN <<'EOF'
+tee /etc/yum.repos.d/rocm.repo <<REPO
+[ROCm-7.1]
+name=ROCm7.1
+baseurl=https://repo.radeon.com/rocm/el9/7.1/main
+enabled=1
+priority=50
+gpgcheck=1
+gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
+REPO
+EOF
+
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+    --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
+    install \
+      rocm-runtime rocm-device-libs hip-runtime-amd \
+      rocblas hipblas rocminfo \
+      python3 python3-pip \
+      ca-certificates \
+      bash \
+ && dnf clean all && rm -rf /var/cache/dnf/*
+
+# Create video group and add proper permissions
+RUN groupadd -g 44 video || true
+
+# ROCm environment variables
+ENV ROCM_PATH=/opt/rocm \
+    HIP_PATH=/opt/rocm \
+    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
+    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
+    HSA_PATH=/opt/rocm \
+    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
+
+# Copy the complete sd-webui with the binary
+COPY --from=builder /sd-webui /app/
+
+# Set up library paths and working directory
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH
+WORKDIR /app
+
+# Install Python dependencies
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Create directories for models and outputs
+RUN mkdir -p /app/models /app/outputs
+
+# Expose web UI port
+EXPOSE 7860
+
+# Add startup script that follows the official instructions
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "=== ROCm Stable Diffusion WebUI ==="\n\
+echo "ROCm Path: $ROCM_PATH"\n\
+echo "Library Path: $LD_LIBRARY_PATH"\n\
+\n\
+# Check for ROCm devices\n\
+if [ -d "/dev/kfd" ] && [ -d "/dev/dri" ]; then\n\
+    echo "✓ ROCm device nodes detected"\n\
+    rocminfo 2>/dev/null | grep -E "(Agent|Name:|Marketing Name:)" || echo "  Warning: rocminfo output limited"\n\
+else\n\
+    echo "❌ ROCm device nodes not found"\n\
+    echo "  Ensure container is run with: --device=/dev/kfd --device=/dev/dri --group-add=video"\n\
+fi\n\
+\n\
+# Verify sd binary exists\n\
+if [ -f "/app/sd" ]; then\n\
+    echo "✓ Stable Diffusion binary found"\n\
+else\n\
+    echo "❌ Stable Diffusion binary not found at /app/sd"\n\
+    exit 1\n\
+fi\n\
+\n\
+echo "Starting Stable Diffusion WebUI using official launch script..."\n\
+exec ./sdcpp_webui.sh --autostart' > /usr/local/bin/docker-entrypoint.sh \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

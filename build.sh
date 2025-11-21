@@ -98,6 +98,8 @@ else
     exit 1
 fi
 
+
+
 echo ""
 echo -e "${GREEN}🎉 All images built and pushed successfully! 🎉${NC}"
 echo ""
