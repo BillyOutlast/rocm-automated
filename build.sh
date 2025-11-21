@@ -112,7 +112,7 @@ else
 fi
 
 print_step "Tagging Stable Diffusion image for registry..."
-if podman tag stable-diffusion.cpp-rocm7.1-gfx1151:latest ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151; then
+if podman tag stable-diffusion.cpp-rocm7.1:gfx1151 ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151; then
     print_success "Tagged: ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151"
 else
     print_error "Failed to tag Stable Diffusion image"
@@ -120,7 +120,7 @@ else
 fi
 
 print_step "Pushing Stable Diffusion image to registry..."
-if podman push ${REGISTRY}/stable-diffusion.cpp-rocm7.1-gfx1151:gfx1151; then
+if podman push ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151; then
     print_success "Pushed: ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151"
 else
     print_error "Failed to push Stable Diffusion image"
