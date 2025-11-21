@@ -4,31 +4,55 @@ ARG FLAVOR=rocm
 ARG PARALLEL=8
 
 ARG ROCM7VERSION=7.1
+ARG CMAKEVERSION=3.31.2
 
-# Clone the ollama repository
+
+FROM registry.fedoraproject.org/fedora:43 AS builder
 
 
-# We require gcc v10 minimum.  v10.3 has regressions, so the rockylinux 8.5 AppStream has the latest compatible version
-FROM --platform=linux/amd64 rocm/dev-almalinux-8:${ROCM7VERSION}-complete AS base-amd64
-RUN yum install -y yum-utils \
-    && yum-config-manager --add-repo https://dl.rockylinux.org/vault/rocky/8.5/AppStream/\$basearch/os/ \
-    && rpm --import https://dl.rockylinux.org/pub/rocky/RPM-GPG-KEY-Rocky-8 \
-    && dnf install -y yum-utils ccache gcc-toolset-10-gcc-10.2.1-8.2.el8 gcc-toolset-10-gcc-c++-10.2.1-8.2.el8 gcc-toolset-10-binutils-2.35-11.el8 \
-    && dnf install -y ccache \
-    && yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
-ENV PATH=/opt/rh/gcc-toolset-10/root/usr/bin:$PATH
+# rocm 7.1 repo
+RUN <<'EOF'
+tee /etc/yum.repos.d/rocm.repo <<REPO
+[ROCm-7.1]
+name=ROCm7.1
+baseurl=https://repo.radeon.com/rocm/el9/7.1/main
+enabled=1
+priority=50
+gpgcheck=1
+gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
+REPO
+EOF
 
-FROM --platform=linux/arm64 almalinux:8 AS base-arm64
-# install epel-release for ccache
-RUN yum install -y yum-utils epel-release \
-    && dnf install -y clang ccache \
-    && yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa/cuda-rhel8.repo
-ENV CC=clang CXX=clang++
+# deps
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+    --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
+    install \
+      make gcc cmake lld clang clang-devel compiler-rt libcurl-devel ninja-build \
+      rocm-llvm rocm-device-libs hip-runtime-amd hip-devel \
+      rocblas rocblas-devel hipblas hipblas-devel rocm-cmake libomp-devel libomp \
+      rocminfo radeontop \
+      clang ccache \
+      git-core vim sudo rsync \
+ && dnf clean all && rm -rf /var/cache/dnf/*
 
-FROM base-rocm AS base
+# rocm env
+ENV ROCM_PATH=/opt/rocm \
+    HIP_PATH=/opt/rocm \
+    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
+    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
+    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
+
+
+# profile
+RUN printf '%s\n' \
+  'export ROCBLAS_USE_HIPBLASLT=1' \
+  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh \
+  && echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
+
 RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /tmp/ollama-src \
   && cd /tmp/ollama-src
 WORKDIR /tmp/ollama-src
+
 ARG CMAKEVERSION
 RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKEVERSION}/cmake-${CMAKEVERSION}-linux-$(uname -m).tar.gz | tar xz -C /usr/local --strip-components 1
 COPY CMakeLists.txt CMakePresets.json ./
@@ -36,22 +60,13 @@ COPY ml/backend/ggml/ggml ml/backend/ggml/ggml
 ENV LDFLAGS=-s
 
 
-FROM base AS rocm-7
 ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
 ARG PARALLEL
-RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /tmp/ollama-src \
-  && cd /tmp/ollama-src
-WORKDIR /tmp/ollama-src
 RUN --mount=type=cache,target=/root/.ccache \
     cmake --preset 'ROCm 7' -DOLLAMA_RUNNER_DIR="rocm_v7" \
         && cmake --build --parallel ${PARALLEL} --preset 'ROCm 7' \
         && cmake --install build --component HIP --strip --parallel ${PARALLEL}
 RUN rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
-
-FROM base AS build
-RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /tmp/ollama-src \
-  && cd /tmp/ollama-src
-WORKDIR /tmp/ollama-src
 COPY go.mod go.sum ./
 RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
 ENV PATH=/usr/local/go/bin:$PATH
@@ -63,19 +78,8 @@ ARG CGO_CFLAGS
 ARG CGO_CXXFLAGS
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -o /bin/ollama .
-
-
-FROM scratch AS rocm
 COPY --from=rocm-7 dist/lib/ollama /lib/ollama
 
-FROM ubuntu:25.10 AS default
-RUN apt-get update \
-    && apt-get install -y ca-certificates rocminfo libvulkan1 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-COPY --from=archive /bin /usr/bin
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-COPY --from=archive /lib/ollama /usr/lib/ollama
 ENV LD_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm
 ENV OLLAMA_HOST=0.0.0.0:11434
 EXPOSE 11434
