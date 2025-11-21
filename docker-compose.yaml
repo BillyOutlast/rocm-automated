@@ -19,7 +19,7 @@ services:
       - OLLAMA_DEBUG=0
       - OLLAMA_FLASH_ATTENTION=true
       - HSA_OVERRIDE_GFX_VERSION="11.5.1"
-    restart: unless-stopped 
+    restart: unless-stopped
     security_opt:
       - seccomp=unconfined
       - label=disable
