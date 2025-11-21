@@ -49,14 +49,11 @@ RUN printf '%s\n' \
   > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh \
   && echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
 
-RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /tmp/ollama-src \
-  && cd /tmp/ollama-src
+RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /tmp/ollama-src
 WORKDIR /tmp/ollama-src
 
 ARG CMAKEVERSION
 RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKEVERSION}/cmake-${CMAKEVERSION}-linux-$(uname -m).tar.gz | tar xz -C /usr/local --strip-components 1
-COPY CMakeLists.txt CMakePresets.json ./
-COPY ml/backend/ggml/ggml ml/backend/ggml/ggml
 ENV LDFLAGS=-s
 
 
@@ -67,18 +64,19 @@ RUN --mount=type=cache,target=/root/.ccache \
         && cmake --build --parallel ${PARALLEL} --preset 'ROCm 7' \
         && cmake --install build --component HIP --strip --parallel ${PARALLEL}
 RUN rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
-COPY go.mod go.sum ./
 RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
 ENV PATH=/usr/local/go/bin:$PATH
 RUN go mod download
-COPY . .
 ARG GOFLAGS="'-ldflags=-w -s'"
 ENV CGO_ENABLED=1
 ARG CGO_CFLAGS
 ARG CGO_CXXFLAGS
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -o /bin/ollama .
-COPY --from=rocm-7 dist/lib/ollama /lib/ollama
+
+FROM scratch AS runtime
+COPY --from=builder /bin/ollama /bin/ollama
+COPY --from=builder /tmp/ollama-src/dist/lib/ollama /lib/ollama
 
 ENV LD_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm
 ENV OLLAMA_HOST=0.0.0.0:11434
