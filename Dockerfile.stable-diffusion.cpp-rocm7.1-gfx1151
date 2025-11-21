@@ -39,32 +39,11 @@ WORKDIR /sd-webui
 RUN dnf install -y python3.13 gcc gcc-c++ wget && \
     wget https://bootstrap.pypa.io/get-pip.py && \
     python3.13 get-pip.py && \
-    python3.13 -m pip install --no-cache-dir -r requirements.txt
-
-# Modify the launch script to skip venv creation and use system python
-RUN sed -i 's/create_venv/# create_venv/' sdcpp_webui.sh && \
-    sed -i 's/activate_venv/# activate_venv/' sdcpp_webui.sh && \
-    sed -i 's/install_requirements/# install_requirements/' sdcpp_webui.sh && \
-    sed -i 's|python3|python3.13|g' sdcpp_webui.sh
-
 # Make the launch script executable
 RUN chmod +x sdcpp_webui.sh
 
 # Runtime stage
-FROM registry.fedoraproject.org/fedora:43 AS runtime
-
-# Install ROCm runtime and Python
-RUN <<'EOF'
-tee /etc/yum.repos.d/rocm.repo <<REPO
-[ROCm-7.1]
-name=ROCm7.1
-baseurl=https://repo.radeon.com/rocm/el9/7.1/main
-enabled=1
-priority=50
-gpgcheck=1
-gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
-REPO
-EOF
+FROM docker.io/getterup/fedora-rocm7.1:latest AS runtime
 
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
@@ -89,16 +68,14 @@ ENV ROCM_PATH=/opt/rocm \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 # Copy the complete sd-webui with the binary and installed dependencies
-COPY --from=builder /sd-webui /app/
-COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages/
-COPY --from=builder /usr/local/bin /usr/local/bin/
+COPY --from=builder /sd-webui /sd-webui
 
 # Set up library paths and working directory
 ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH
-WORKDIR /app
+WORKDIR /sd-webui
 
 # Create directories for models and outputs
-RUN mkdir -p /app/models /app/outputs
+RUN mkdir -p /sd-webui/models /sd-webui/outputs
 
 # Expose web UI port
 EXPOSE 7860
