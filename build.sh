@@ -98,6 +98,35 @@ else
     exit 1
 fi
 
+echo ""
+echo -e "${BLUE}----------------------------------------${NC}"
+echo ""
+
+print_step "Building Stable Diffusion ROCm 7.1 image..."
+echo -e "${YELLOW}Command: podman build -t stable-diffusion.cpp-rocm7.1-gfx1151:latest -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151${NC}"
+if podman build -t stable-diffusion.cpp-rocm7.1-gfx1151:latest -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151; then
+    print_success "Stable Diffusion ROCm 7.1 image built successfully"
+else
+    print_error "Failed to build Stable Diffusion ROCm 7.1 image"
+    exit 1
+fi
+
+print_step "Tagging Stable Diffusion image for registry..."
+if podman tag stable-diffusion.cpp-rocm7.1-gfx1151:latest ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151; then
+    print_success "Tagged: ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151"
+else
+    print_error "Failed to tag Stable Diffusion image"
+    exit 1
+fi
+
+print_step "Pushing Stable Diffusion image to registry..."
+if podman push ${REGISTRY}/stable-diffusion.cpp-rocm7.1-gfx1151:latest; then
+    print_success "Pushed: ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151"
+else
+    print_error "Failed to push Stable Diffusion image"
+    exit 1
+fi
+
 
 
 echo ""
@@ -106,4 +135,5 @@ echo ""
 echo -e "${CYAN}Images available at:${NC}"
 echo -e "  • https://hub.docker.com/r/getterup/${FEDORA_IMAGE}"
 echo -e "  • https://hub.docker.com/r/getterup/${OLLAMA_IMAGE}"
+echo -e "  • https://hub.docker.com/r/getterup/stable-diffusion.cpp-rocm7.1:gfx1151"
 echo ""
