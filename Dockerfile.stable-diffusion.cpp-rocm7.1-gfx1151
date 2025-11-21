@@ -32,6 +32,11 @@ WORKDIR /sd-webui
 # Copy the compiled sd binary to the webui folder as required
 RUN cp /stable-diffusion.cpp/build/bin/sd /sd-webui/sd
 
+# Install Python dependencies in builder stage where we have all the tools
+WORKDIR /sd-webui
+RUN dnf install -y python3 python3-pip gcc gcc-c++ && \
+    pip3 install --no-cache-dir -r requirements.txt
+
 # Make the launch script executable
 RUN chmod +x sdcpp_webui.sh
 
@@ -72,15 +77,14 @@ ENV ROCM_PATH=/opt/rocm \
     HSA_PATH=/opt/rocm \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
-# Copy the complete sd-webui with the binary
+# Copy the complete sd-webui with the binary and installed dependencies
 COPY --from=builder /sd-webui /app/
+COPY --from=builder /usr/local/lib/python3.*/site-packages /usr/local/lib/python3.14/site-packages/
+COPY --from=builder /usr/local/bin /usr/local/bin/
 
 # Set up library paths and working directory
 ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH
 WORKDIR /app
-
-# Install Python dependencies
-RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Create directories for models and outputs
 RUN mkdir -p /app/models /app/outputs
