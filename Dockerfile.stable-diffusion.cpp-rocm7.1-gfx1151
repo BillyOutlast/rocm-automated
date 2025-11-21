@@ -97,32 +97,4 @@ RUN mkdir -p /app/models /app/outputs
 EXPOSE 7860
 
 # Add startup script that follows the official instructions
-RUN echo '#!/bin/bash\n\
-set -e\n\
-\n\
-echo "=== ROCm Stable Diffusion WebUI ==="\n\
-echo "ROCm Path: $ROCM_PATH"\n\
-echo "Library Path: $LD_LIBRARY_PATH"\n\
-\n\
-# Check for ROCm devices\n\
-if [ -d "/dev/kfd" ] && [ -d "/dev/dri" ]; then\n\
-    echo "✓ ROCm device nodes detected"\n\
-    rocminfo 2>/dev/null | grep -E "(Agent|Name:|Marketing Name:)" || echo "  Warning: rocminfo output limited"\n\
-else\n\
-    echo "❌ ROCm device nodes not found"\n\
-    echo "  Ensure container is run with: --device=/dev/kfd --device=/dev/dri --group-add=video"\n\
-fi\n\
-\n\
-# Verify sd binary exists\n\
-if [ -f "/app/sd" ]; then\n\
-    echo "✓ Stable Diffusion binary found"\n\
-else\n\
-    echo "❌ Stable Diffusion binary not found at /app/sd"\n\
-    exit 1\n\
-fi\n\
-\n\
-echo "Starting Stable Diffusion WebUI using official launch script..."\n\
-exec python3.13 -c "import sys; exec(open(\"./sdcpp_webui.sh\").read())" || exec ./sdcpp_webui.sh --autostart' > /usr/local/bin/docker-entrypoint.sh \
-    && chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+ENTRYPOINT ["./sdcpp_webui.sh", "--autostart"]
