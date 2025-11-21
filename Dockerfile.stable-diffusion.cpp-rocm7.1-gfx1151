@@ -34,7 +34,7 @@ RUN cp /stable-diffusion.cpp/build/bin/sd /sd-webui/sd
 
 # Install Python dependencies in builder stage where we have all the tools
 WORKDIR /sd-webui
-RUN dnf install -y python3.13 python3.13-pip gcc gcc-c++ && \
+RUN dnf install -y python3.13 python3-pip gcc gcc-c++ && \
     python3.13 -m pip install --no-cache-dir -r requirements.txt
 
 # Make the launch script executable
@@ -61,7 +61,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     install \
       rocm-runtime rocm-device-libs hip-runtime-amd \
       rocblas hipblas rocminfo \
-      python3.13 python3.13-pip \
+      python3.13 python3-pip \
       ca-certificates \
       bash \
  && dnf clean all && rm -rf /var/cache/dnf/*
