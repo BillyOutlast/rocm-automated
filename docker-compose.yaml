@@ -1,6 +1,6 @@
 services:
   ollama:
-    image: docker.io/getterup/ollama-rocm7.1:latest
+    image: getterup/ollama-rocm7.1:latest
     container_name: ollama
     ports:
       - "11434:11434"
@@ -26,7 +26,7 @@ services:
       - seccomp=unconfined
       - label=disable
   stable-diffusion.cpp:
-    image: docker.io/getterup/stable-diffusion.cpp-rocm7.1-gfx1151:latest
+    image: stable-diffusion.cpp-rocm7.1-gfx1151:latest
     container_name: stable-diffusion.cpp
     ports:
       - "7860:7860"
