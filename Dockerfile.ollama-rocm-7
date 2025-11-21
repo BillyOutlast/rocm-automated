@@ -1,3 +1,4 @@
+FROM registry.fedoraproject.org/fedora:43 AS builder
 # vim: filetype=dockerfile
 
 ARG FLAVOR=rocm
@@ -5,10 +6,6 @@ ARG PARALLEL=8
 
 ARG ROCM7VERSION=7.1
 ARG CMAKEVERSION=3.31.2
-
-
-FROM registry.fedoraproject.org/fedora:43 AS builder
-
 
 # rocm 7.1 repo
 RUN <<'EOF'
@@ -74,7 +71,7 @@ ARG CGO_CXXFLAGS
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -o /bin/ollama .
 
-FROM scratch AS runtime
+
 COPY --from=builder /bin/ollama /bin/ollama
 COPY --from=builder /tmp/ollama-src/dist/lib/ollama /lib/ollama
 

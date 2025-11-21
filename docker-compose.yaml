@@ -1,0 +1,25 @@
+services:
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama-rocm-7
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./ollama:/root/.ollama:Z
+      - /etc/resolv.conf:/etc/resolv.conf:ro
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+    environment:
+      - OLLAMA_VULKAN=0
+      - OLLAMA_DEBUG=0
+      - OLLAMA_FLASH_ATTENTION=true
+      - HSA_OVERRIDE_GFX_VERSION="11.5.1"
+    restart: unless-stopped 
+    security_opt:
+      - seccomp=unconfined
+      - label=disable
