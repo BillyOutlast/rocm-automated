@@ -24,6 +24,8 @@ RUN mkdir -p build && cd build && \
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON && \
     cmake --build . --config Release
 
+
+
 # Clone sd.cpp-webui and place the binary in its folder as per instructions
 WORKDIR /
 RUN git clone https://github.com/daniandtheweb/sd.cpp-webui.git /sd-webui

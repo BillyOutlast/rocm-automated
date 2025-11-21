@@ -103,8 +103,8 @@ echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
 print_step "Building Stable Diffusion ROCm 7.1 image..."
-echo -e "${YELLOW}Command: podman build -t stable-diffusion.cpp-rocm7.1-gfx1151:latest -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151${NC}"
-if podman build -t stable-diffusion.cpp-rocm7.1-gfx1151:latest -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151; then
+echo -e "${YELLOW}Command: podman build -t stable-diffusion.cpp-rocm7.1:gfx1151 -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151${NC}"
+if podman build -t stable-diffusion.cpp-rocm7.1:gfx1151 -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151; then
     print_success "Stable Diffusion ROCm 7.1 image built successfully"
 else
     print_error "Failed to build Stable Diffusion ROCm 7.1 image"
@@ -120,7 +120,7 @@ else
 fi
 
 print_step "Pushing Stable Diffusion image to registry..."
-if podman push ${REGISTRY}/stable-diffusion.cpp-rocm7.1-gfx1151:latest; then
+if podman push ${REGISTRY}/stable-diffusion.cpp-rocm7.1-gfx1151:gfx1151; then
     print_success "Pushed: ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151"
 else
     print_error "Failed to push Stable Diffusion image"
