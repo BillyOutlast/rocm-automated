@@ -33,8 +33,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -o /bin/ollama .
 
 
-COPY dist/lib/ollama /lib/ollama
-
 ENV LD_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm
 ENV OLLAMA_HOST=0.0.0.0:11434
 EXPOSE 11434
