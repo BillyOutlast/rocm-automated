@@ -1,4 +1,4 @@
-FROM registry.fedoraproject.org/fedora:43 AS builder
+FROM docker.io/getterup/fedora-rocm7.1:latest AS builder
 # vim: filetype=dockerfile
 
 ARG FLAVOR=rocm
@@ -6,45 +6,6 @@ ARG PARALLEL=8
 
 ARG ROCM7VERSION=7.1
 ARG CMAKEVERSION=3.31.2
-
-# rocm 7.1 repo
-RUN <<'EOF'
-tee /etc/yum.repos.d/rocm.repo <<REPO
-[ROCm-7.1]
-name=ROCm7.1
-baseurl=https://repo.radeon.com/rocm/el9/7.1/main
-enabled=1
-priority=50
-gpgcheck=1
-gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
-REPO
-EOF
-
-# deps
-RUN dnf -y --nodocs --setopt=install_weak_deps=False \
-    --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
-    install \
-      make gcc cmake lld clang clang-devel compiler-rt libcurl-devel ninja-build \
-      rocm-llvm rocm-device-libs hip-runtime-amd hip-devel \
-      rocblas rocblas-devel hipblas hipblas-devel rocm-cmake libomp-devel libomp \
-      rocminfo radeontop \
-      clang ccache \
-      git-core vim sudo rsync \
- && dnf clean all && rm -rf /var/cache/dnf/*
-
-# rocm env
-ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm \
-    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
-
-
-# profile
-RUN printf '%s\n' \
-  'export ROCBLAS_USE_HIPBLASLT=1' \
-  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh \
-  && echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
 
 RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /tmp/ollama-src
 WORKDIR /tmp/ollama-src
