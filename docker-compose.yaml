@@ -25,7 +25,7 @@ services:
       - seccomp=unconfined
       - label=disable
   stable-diffusion.cpp:
-    image: stable-diffusion.cpp-rocm7.1-gfx1151:latest
+    image: stable-diffusion.cpp-rocm7.1:gfx1151
     container_name: stable-diffusion.cpp
     ports:
       - "7860:7860"
@@ -37,8 +37,8 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - video
-    environment:
-      - HSA_OVERRIDE_GFX_VERSION="11.5.1"
+    #environment:
+    #  - HSA_OVERRIDE_GFX_VERSION="11.5.1"
     restart: unless-stopped
     security_opt:
       - seccomp=unconfined
