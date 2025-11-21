@@ -14,14 +14,13 @@ services:
       - video
     environment:
       - OLLAMA_VULKAN=0
-      - OLLAMA_DEBUG=2
-      - OLLAMA_FLASH_ATTENTION=true
-      - HSA_ENABLE_SDMA=0
-      - OLLAMA_KEEP_ALIVE=-1
-      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_DEBUG=1
       - OLLAMA_FLASH_ATTENTION=1
+      - HSA_ENABLE_SDMA=0
       - OLLAMA_GPU_OVERHEAD=0
-      - OLLAMA_KEEP_ALIVE=1h
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_KV_CACHE_TYPE="q8_0"
+      - ROCR_VISIBLE_DEVICES=0
     restart: unless-stopped
     cap_add:
       - SYS_PTRACE
