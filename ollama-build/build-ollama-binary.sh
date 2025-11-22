@@ -130,9 +130,6 @@ cmake --install build --component HIP --strip --parallel \${PARALLEL}
 echo '=== Cleaning up ROCM libraries ==='
 rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
 
-echo '=== Copying Go files ==='
-cp go.mod go.sum ./
-
 echo '=== Installing Go ==='
 curl -fsSL https://golang.org/dl/go\$(awk '/^go/ { print \$2 }' go.mod).linux-\$(case \$(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
 export PATH=/usr/local/go/bin:\$PATH
@@ -142,8 +139,7 @@ go mod download
 
 echo '=== Building Ollama binary ==='
 export CGO_ENABLED=1
-export GOFLAGS='-ldflags=-w -s'
-go build -v -trimpath -buildmode=pie -o ${MOUNT_OUTPUT_PATH}/bin/ollama .
+go build -v -ldflags=-w -s -trimpath -buildmode=pie -o ${MOUNT_OUTPUT_PATH}/bin/ollama .
 
 echo '=== Copying built libraries ==='
 cp -r dist/lib/ollama ${MOUNT_OUTPUT_PATH}/lib/
