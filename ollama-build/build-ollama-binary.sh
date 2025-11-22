@@ -138,7 +138,7 @@ curl -fsSL https://golang.org/dl/go\$(awk '/^go/ { print \$2 }' go.mod).linux-\$
 export PATH=/usr/local/go/bin:\$PATH
 
 echo '=== Downloading Go dependencies ==='
-export GOMODCACHE=/go
+export GOMODCACHE=/go-mod-cache
 go mod download 
 
 echo '=== Building Ollama binary ==='
