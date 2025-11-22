@@ -86,5 +86,4 @@ fi\n\
 exec "$@"' > /usr/local/bin/docker-entrypoint.sh \
     && chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["/usr/bin/ollama", "serve"]
+ENTRYPOINT ["/usr/bin/ollama", "serve"]
