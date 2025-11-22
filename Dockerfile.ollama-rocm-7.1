@@ -61,18 +61,32 @@ ENV ROCM_PATH=/opt/rocm \
     HIP_PATH=/opt/rocm \
     HIP_CLANG_PATH=/opt/rocm/llvm/bin \
     HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
+    HSA_PATH=/opt/rocm \
+    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH \
+    HIP_VISIBLE_DEVICES=all \
+    ROCR_VISIBLE_DEVICES=all \
+    GPU_DEVICE_ORDINAL=0 \
+    AMD_SERIALIZE_KERNEL=3 \
+    HSA_ENABLE_SDMA=0
 
 # Copy built ollama binary and libraries
 COPY --from=builder /bin/ollama /usr/bin/ollama
 COPY --from=builder /tmp/ollama-src/dist/lib/ollama /usr/lib/ollama
 
-# Set up library paths and environment
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH 
+# Set up library paths and Ollama environment
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollama/rocm_v7:$LD_LIBRARY_PATH \
+    OLLAMA_HOST=0.0.0.0:11434 \
+    OLLAMA_DEBUG=1 \
+    OLLAMA_FLASH_ATTENTION=true \
+    OLLAMA_KV_CACHE_TYPE="q8_0" \
+    OLLAMA_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm_v7
+
+# Create render group and add proper permissions for GPU access
+RUN groupadd -g 109 render || true && \
+    mkdir -p /dev/dri && \
+    chmod 666 /dev/null
  
 # Expose port
-EXPOSE 11434
-ENV OLLAMA_HOST=0.0.0.0:11434
 EXPOSE 11434
 ENTRYPOINT ["/usr/bin/ollama"]
 CMD ["serve"]
