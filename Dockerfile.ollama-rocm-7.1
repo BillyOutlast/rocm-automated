@@ -35,28 +35,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Runtime stage with proper ROCm support
 FROM docker.io/getterup/fedora-rocm7.1:latest AS builder
 
-# Install ROCm runtime and dependencies
-RUN <<'EOF'
-tee /etc/yum.repos.d/rocm.repo <<REPO
-[ROCm-7.1]
-name=ROCm7.1
-baseurl=https://repo.radeon.com/rocm/el9/7.1/main
-enabled=1
-priority=50
-gpgcheck=1
-gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
-REPO
-EOF
-
-RUN dnf -y --nodocs --setopt=install_weak_deps=False \
-    --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
-    install \
-      rocm-runtime rocm-device-libs hip-runtime-amd \
-      rocblas hipblas rocminfo rocm-smi \
-      hsa-rocr hsa-rocr-dev \
-      ca-certificates \
- && dnf clean all && rm -rf /var/cache/dnf/*
-
 # ROCm environment variables
 ENV ROCM_PATH=/opt/rocm \
     HIP_PATH=/opt/rocm \
