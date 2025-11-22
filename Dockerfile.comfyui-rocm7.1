@@ -14,7 +14,7 @@ ENV ROCM_PATH=/opt/rocm \
 
 # Install system dependencies
 RUN dnf update -y && \
-    dnf install -y git python3 python3-pip python3-venv && \
+    dnf install -y git python3 python3-pip && \
     dnf clean all
 
 # Set up library paths and environment
