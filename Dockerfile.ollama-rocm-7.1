@@ -73,17 +73,5 @@ ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRA
 # Expose port
 EXPOSE 11434
 
-# Add startup script to ensure proper GPU access
-RUN echo '#!/bin/bash\n\
-# Check for ROCm devices\n\
-if [ -d "/dev/kfd" ] && [ -d "/dev/dri" ]; then\n\
-    echo "ROCm devices detected"\n\
-    rocminfo 2>/dev/null || echo "Warning: rocminfo failed"\n\
-else\n\
-    echo "Warning: ROCm devices not found. Ensure Docker has GPU access."\n\
-fi\n\
-\n\
-exec "$@"' > /usr/local/bin/docker-entrypoint.sh \
-    && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT ["/usr/bin/ollama", "serve"]
