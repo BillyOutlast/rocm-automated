@@ -139,7 +139,7 @@ go mod download
 
 echo '=== Building Ollama binary ==='
 export CGO_ENABLED=1
-export GOFLAGS="'-ldflags=-w -s'"
+export GOFLAGS='-ldflags=-w -s'
 go build -v -trimpath -buildmode=pie -o ${MOUNT_OUTPUT_PATH}/bin/ollama .
 
 echo '=== Copying built libraries ==='
