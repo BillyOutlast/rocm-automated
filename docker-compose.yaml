@@ -30,7 +30,21 @@ services:
     ports:
       - "7860:7860"
     volumes:
-      - ./stable-diffusion.cpp:/stable-diffusion.cpp:Z
+      - ./sd.cpp-webui/outputs/any2video:/sd-webui/outputs/any2video:Z
+      - ./sd.cpp-webui/outputs/img2img:/sd-webui/outputs/img2img:Z
+      - ./sd.cpp-webui/outputs/imgedit:/sd-webui/outputs/imgedit:Z
+      - ./sd.cpp-webui/outputs/txt2img:/sd-webui/outputs/txt2img:Z
+      - ./sd.cpp-webui/outputs/upscale:/sd-webui/outputs/upscale:Z
+      - ./sd.cpp-webui/models/checkpoints:/sd-webui/models/checkpoints:Z
+      - ./sd.cpp-webui/models/clip:/sd-webui/models/clip:Z
+      - ./sd.cpp-webui/models/controlnet:/sd-webui/models/controlnet:Z
+      - ./sd.cpp-webui/models/embeddings:/sd-webui/models/embeddings:Z
+      - ./sd.cpp-webui/models/loras:/sd-webui/models/loras:Z
+      - ./sd.cpp-webui/models/photomaker:/sd-webui/models/photomaker:Z
+      - ./sd.cpp-webui/models/taesd:/sd-webui/models/taesd:Z
+      - ./sd.cpp-webui/models/unet:/sd-webui/models/unet:Z
+      - ./sd.cpp-webui/models/upscale_models:/sd-webui/models/upscale_models:Z
+      - ./sd.cpp-webui/models/vae:/sd-webui/models/vae:Z
       - /etc/resolv.conf:/etc/resolv.conf:ro
     devices:
       - /dev/kfd:/dev/kfd
