@@ -3,50 +3,93 @@ FROM docker.io/getterup/fedora-rocm7.1:latest
 
 ARG FLAVOR=rocm
 ARG PARALLEL=8
-
 ARG ROCM7VERSION=7.1
 ARG CMAKEVERSION=3.31.2
 
-RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /ollama
+# Build configuration - paths matching build-ollama-binary.sh
+ARG SOURCE_DIR="../ollama-build/ollama-src"
+ARG BUILD_OUTPUT_DIR="../ollama-build/ollama-build-output"
+ARG MOUNT_SOURCE_PATH="/ollama-src"
+ARG MOUNT_OUTPUT_PATH="/ollama-output"
+
+# Create mount points and output directories
+RUN mkdir -p ${MOUNT_SOURCE_PATH} \
+    && mkdir -p ${MOUNT_OUTPUT_PATH} \
+    && mkdir -p ${MOUNT_OUTPUT_PATH}/bin \
+    && mkdir -p ${MOUNT_OUTPUT_PATH}/lib
+
+# Clone the source repository (can be overridden by mounted source)
+RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /ollama-default
+# If source is mounted at MOUNT_SOURCE_PATH, use that; otherwise use cloned source
+RUN if [ -d "${MOUNT_SOURCE_PATH}/.git" ]; then \
+        echo "Using mounted source at ${MOUNT_SOURCE_PATH}"; \
+        ln -sf ${MOUNT_SOURCE_PATH} /ollama; \
+    else \
+        echo "Using cloned source"; \
+        ln -sf /ollama-default /ollama; \
+    fi
+
 WORKDIR /ollama
 
+# Install CMake
 ARG CMAKEVERSION
 RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKEVERSION}/cmake-${CMAKEVERSION}-linux-$(uname -m).tar.gz | tar xz -C /usr/local --strip-components 1
 ENV LDFLAGS=-s
 
-
+# Set build environment with ROCm paths
 ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
+
+# Build Ollama with ROCm support
 ARG PARALLEL
 RUN --mount=type=cache,target=/root/.ccache \
     cmake --preset 'ROCm 7' -DOLLAMA_RUNNER_DIR="rocm_v7" \
         && cmake --build --parallel ${PARALLEL} --preset 'ROCm 7' \
         && cmake --install build --component HIP --strip --parallel ${PARALLEL}
+
+# Clean up ROCM libraries (remove unsupported GPU architectures)
 RUN rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
+
+# Install Go based on go.mod version
 RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
 ENV PATH=/usr/local/go/bin:$PATH
+
+# Download Go dependencies
 RUN go mod download
+
+# Set Go build flags and environment
 ARG GOFLAGS="'-ldflags=-w -s'"
 ENV CGO_ENABLED=1
 ARG CGO_CFLAGS
 ARG CGO_CXXFLAGS
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -buildmode=pie -o /bin/ollama .
 
-# ROCm environment variables
+# Build Ollama binary and save to mounted output directory
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -trimpath -buildmode=pie -o ${MOUNT_OUTPUT_PATH}/bin/ollama .
+
+# Copy built libraries to mounted output directory
+RUN cp -r dist/lib/ollama ${MOUNT_OUTPUT_PATH}/lib/
+
+# Copy from mounted output to standard system locations for runtime
+RUN cp ${MOUNT_OUTPUT_PATH}/bin/ollama /usr/bin/ollama \
+    && cp -r ${MOUNT_OUTPUT_PATH}/lib/ollama /usr/lib/ollama \
+    && chmod +x /usr/bin/ollama
+
+# Verify the build output in mounted directory
+RUN ls -la ${MOUNT_OUTPUT_PATH}/bin/ \
+    && ls -la ${MOUNT_OUTPUT_PATH}/lib/ \
+    && echo "Build output saved to mounted directories"
+
+# ROCm environment variables for runtime
 ENV ROCM_PATH=/opt/rocm \
     HIP_PATH=/opt/rocm \
     HIP_CLANG_PATH=/opt/rocm/llvm/bin \
     HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
-# Copy built ollama binary and libraries
-COPY  /dist/lib/ollama /usr/lib/ollama
-
 # Set up library paths and environment
 ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH 
 
 # Expose port
 EXPOSE 11434
-
 
 ENTRYPOINT ["/usr/bin/ollama", "serve"]
