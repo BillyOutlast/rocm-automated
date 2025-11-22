@@ -8,18 +8,6 @@ COPY ./ollama-build/ollama-build-output/lib/ollama /usr/lib/ollama
 # Set executable permissions
 RUN chmod +x /usr/bin/ollama
 
-# ROCm environment variables for runtime
-ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm \
-    HSA_PATH=/opt/rocm/hsa \
-    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    HSA_ENABLE_SDMA=0 \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
-
-# Set up library paths and environment
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollama/rocm:/usr/lib/ollama/rocm_v7:$LD_LIBRARY_PATH
-
 # Expose port
 ENV OLLAMA_HOST=0.0.0.0:11434
 EXPOSE 11434
