@@ -33,12 +33,6 @@ WORKDIR /sd-webui
 
 # Copy the compiled sd binary to the webui folder as required
 RUN cp /stable-diffusion.cpp/build/bin/sd /sd-webui/sd
-
-# Install Python dependencies in builder stage where we have all the tools
-WORKDIR /sd-webui
-RUN dnf install -y python3.13 gcc gcc-c++ wget && \
-    wget https://bootstrap.pypa.io/get-pip.py && \
-    python3.13 get-pip.py && \
 # Make the launch script executable
 RUN chmod +x sdcpp_webui.sh
 
@@ -81,4 +75,4 @@ RUN mkdir -p /sd-webui/models /sd-webui/outputs
 EXPOSE 7860
 
 # Add startup script that follows the official instructions
-ENTRYPOINT ["./sdcpp_webui.sh", "--autostart"]
+ENTRYPOINT ["./sdcpp_webui.sh", "--autostart", "--listen"]
