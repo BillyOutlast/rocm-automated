@@ -56,7 +56,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     install \
       libcurl-devel golang \
-      vulkan-headers vulkan-loader vulkan-loader-devel \
+      vulkan-headers vulkan-loader vulkan-loader-devel glslc \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
 # Set ROCm base paths
