@@ -12,6 +12,7 @@ ARG BUILD_OUTPUT_DIR="../ollama-build/ollama-build-output"
 ARG MOUNT_SOURCE_PATH="/ollama-src"
 ARG MOUNT_OUTPUT_PATH="/ollama-output"
 
+COPY ${SOURCE_DIR} ${MOUNT_SOURCE_PATH}
 
 
 # Install CMake
