@@ -38,13 +38,13 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-# Check for podman
-if ! command -v podman &> /dev/null; then
-    print_error "Podman is not installed"
+# Check for docker
+if ! command -v docker &> /dev/null; then
+    print_error "docker is not installed"
     exit 1
 fi
 
-print_success "Podman found"
+print_success "docker found"
 
 # Create output directories
 mkdir -p "${OUTPUT_DIR}"
@@ -79,7 +79,7 @@ extract_venv() {
     
     # Build container with venv
     print_step "Building container image for ${variant}..."
-    if podman build \
+    if docker build \
         --build-arg PYTORCH_INDEX_URL="${pytorch_url}" \
         --build-arg GPU_ARCH="${variant}" \
         -t "${image_name}" \
@@ -93,7 +93,7 @@ extract_venv() {
     
     # Create container to extract venv
     print_step "Creating temporary container..."
-    podman create --name "${container_name}" "${image_name}"
+    docker create --name "${container_name}" "${image_name}"
     
     # Extract the virtual environment
     print_step "Extracting virtual environment..."
@@ -101,12 +101,12 @@ extract_venv() {
     mkdir -p "${extract_path}"
     
     # Extract the venv and ComfyUI
-    if podman cp "${container_name}:/app/ComfyUI/venv" "${extract_path}/" && \
-       podman cp "${container_name}:/app/ComfyUI" "${extract_path}/ComfyUI"; then
+    if docker cp "${container_name}:/app/ComfyUI/venv" "${extract_path}/" && \
+       docker cp "${container_name}:/app/ComfyUI" "${extract_path}/ComfyUI"; then
         print_success "Virtual environment extracted"
     else
         print_error "Failed to extract venv for ${variant}"
-        podman rm "${container_name}" 2>/dev/null || true
+        docker rm "${container_name}" 2>/dev/null || true
         return 1
     fi
     
@@ -160,12 +160,12 @@ EOF
     chmod +x "${extract_path}/launch_comfyui_${variant}.sh"
     
     # Clean up container
-    podman rm "${container_name}"
+    docker rm "${container_name}"
     
     # Optionally remove the image to save space
     read -p "Remove container image for ${variant} to save space? (y/N): " remove_image
     if [[ $remove_image =~ ^[Yy]$ ]]; then
-        podman rmi "${image_name}"
+        docker rmi "${image_name}"
         print_success "Container image removed"
     fi
     

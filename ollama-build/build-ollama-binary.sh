@@ -26,9 +26,9 @@ command_exists() {
 }
 
 # Check for required tools
-if ! command_exists podman; then
-    echo "Error: podman is not installed or not in PATH"
-    echo "Please install podman first"
+if ! command_exists docker; then
+    echo "Error: docker is not installed or not in PATH"
+    echo "Please install docker first"
     exit 1
 fi
 
@@ -38,7 +38,7 @@ if ! command_exists git; then
     exit 1
 fi
 
-echo "✓ Required tools found: podman, git"
+echo "✓ Required tools found: docker, git"
 
 # Create directories
 mkdir -p "${BUILD_OUTPUT_DIR}"
@@ -47,10 +47,10 @@ mkdir -p "${BUILD_OUTPUT_DIR}/lib"
 mkdir -p "${GOMODCACHE}"
 
 # Clean up existing container if it exists
-if podman ps -a --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
+if docker ps -a --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
     echo "Removing existing container: ${CONTAINER_NAME}"
-    podman stop ${CONTAINER_NAME} 2>/dev/null || true
-    podman rm ${CONTAINER_NAME} 2>/dev/null || true
+    docker stop ${CONTAINER_NAME} 2>/dev/null || true
+    docker rm ${CONTAINER_NAME} 2>/dev/null || true
 fi
 
 # Clone or update the repository
@@ -78,11 +78,11 @@ echo "Output path: ${ABSOLUTE_OUTPUT_PATH}"
 
 # Pull the base image
 echo "Pulling base image: ${BASE_IMAGE}"
-podman pull "${BASE_IMAGE}"
+docker pull "${BASE_IMAGE}"
 
 # Create and start the build container
 echo "Creating build container..."
-podman run -d \
+docker run -d \
     --name "${CONTAINER_NAME}" \
     --hostname ollama-build \
     -v "${ABSOLUTE_SOURCE_PATH}:${MOUNT_SOURCE_PATH}:Z" \
@@ -110,7 +110,7 @@ podman run -d \
 echo "✓ Container '${CONTAINER_NAME}' created and started"
 
 echo "Installing CMake ${CMAKEVERSION}..."
-podman exec ${CONTAINER_NAME} bash -c "
+docker exec ${CONTAINER_NAME} bash -c "
 curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKEVERSION}/cmake-${CMAKEVERSION}-linux-\$(uname -m).tar.gz | tar xz -C /usr/local --strip-components 1
 "
 
@@ -118,7 +118,7 @@ echo "✓ CMake installed"
 
 # Set up build environment and run the build
 echo "Starting Ollama build process..."
-podman exec ${CONTAINER_NAME} bash -c "
+docker exec ${CONTAINER_NAME} bash -c "
 set -e
 echo '=== Setting up build environment ==='
 export PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:\$PATH
@@ -181,8 +181,8 @@ fi
 
 # Clean up container
 echo "Cleaning up build container..."
-podman stop ${CONTAINER_NAME}
-podman rm ${CONTAINER_NAME}
+docker stop ${CONTAINER_NAME}
+docker rm ${CONTAINER_NAME}
 
 echo ""
 echo "=== Build Complete ==="

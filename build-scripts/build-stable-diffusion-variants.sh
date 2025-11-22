@@ -48,13 +48,13 @@ GFX_ARCHITECTURES["gfx1101"]="RDNA 3 (RX 7800 XT/7700 XT)"
 GFX_ARCHITECTURES["gfx1030"]="RDNA 2 (RX 6000 series)"
 GFX_ARCHITECTURES["gfx1201"]="RDNA 4 (RX 9060 XT/ RX 9070/XT)"
 
-# Check if podman is available
-if ! command -v podman &> /dev/null; then
-    print_error "podman is not installed or not in PATH"
+# Check if docker is available
+if ! command -v docker &> /dev/null; then
+    print_error "docker is not installed or not in PATH"
     exit 1
 fi
 
-print_step "Building stable-diffusion.cpp podman images for different AMD GPU architectures..."
+print_step "Building stable-diffusion.cpp docker images for different AMD GPU architectures..."
 echo ""
 
 # Build images for each architecture
@@ -63,9 +63,9 @@ for gfx_name in "${!GFX_ARCHITECTURES[@]}"; do
     image_tag="${REGISTRY}/${BASE_IMAGE_NAME}:${gfx_name}"
     
     print_step "Building for ${gfx_name} - ${architecture_desc}..."
-    echo -e "${YELLOW}Command: podman build -t ${image_tag} --build-arg GFX_NAME=${gfx_name} -f ${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1 .${NC}"
+    echo -e "${YELLOW}Command: docker build -t ${image_tag} --build-arg GFX_NAME=${gfx_name} -f ${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1 .${NC}"
     
-    if podman build -t "${image_tag}" \
+    if docker build -t "${image_tag}" \
         --build-arg GFX_NAME="${gfx_name}" \
         -f "${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1" .; then
         print_success "Built ${image_tag} successfully"
@@ -87,7 +87,7 @@ for gfx_name in "${!GFX_ARCHITECTURES[@]}"; do
     architecture_desc="${GFX_ARCHITECTURES[$gfx_name]}"
     
     print_step "Pushing ${image_tag} (${architecture_desc})..."
-    if podman push "${image_tag}"; then
+    if docker push "${image_tag}"; then
         print_success "Pushed ${image_tag} successfully"
     else
         print_error "Failed to push ${image_tag}"
@@ -110,7 +110,7 @@ for gfx_name in "${!GFX_ARCHITECTURES[@]}"; do
 done
 echo ""
 echo -e "${CYAN}To run an image:${NC}"
-echo -e "  ${YELLOW}podman run -it --device=/dev/kfd --device=/dev/dri --group-add video -p 7860:7860 ${REGISTRY}/${BASE_IMAGE_NAME}:<gfx_name>${NC}"
+echo -e "  ${YELLOW}docker run -it --device=/dev/kfd --device=/dev/dri --group-add video -p 7860:7860 ${REGISTRY}/${BASE_IMAGE_NAME}:<gfx_name>${NC}"
 echo ""
 echo -e "${CYAN}Example for RDNA 3:${NC}"
-echo -e "  ${YELLOW}podman run -it --device=/dev/kfd --device=/dev/dri --group-add video -p 7860:7860 ${REGISTRY}/${BASE_IMAGE_NAME}:gfx1100${NC}"
+echo -e "  ${YELLOW}docker run -it --device=/dev/kfd --device=/dev/dri --group-add video -p 7860:7860 ${REGISTRY}/${BASE_IMAGE_NAME}:gfx1100${NC}"
