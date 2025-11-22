@@ -36,7 +36,6 @@ ARG PARALLEL=8
 
 ARG ROCM7VERSION=7.1
 ARG CMAKEVERSION=3.31.2
-ARG GPU_TARGETS="gfx940;gfx941;gfx942;gfx1010;gfx1012;gfx1030;gfx1100;gfx1101;gfx1102;gfx1151;gfx1200;gfx1201;gfx908:xnack-;gfx90a:xnack+;gfx90a:xnack-"
 
 
 RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /ollama-src
@@ -52,7 +51,7 @@ ARG PARALLEL
 RUN --mount=type=cache,target=/root/.ccache \
     cmake --preset 'ROCm 7' -DOLLAMA_RUNNER_DIR="rocm_v7" \
         && cmake --build --parallel ${PARALLEL} --preset 'ROCm 7' \
-        && cmake --install build --component HIP --strip --parallel ${PARALLEL}
+        && cmake --install build --component HIP --strip --parallel ${PARALLEL} 
 RUN rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
 RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
 ENV PATH=/usr/local/go/bin:$PATH
