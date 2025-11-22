@@ -59,7 +59,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
       vulkan-headers vulkan-loader vulkan-loader-devel glslc \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
-RUN  sudo dnf install glslang python-devel @development-tools
+RUN dnf -y install glslang python-devel @development-tools
 
 
 # Set ROCm base paths
