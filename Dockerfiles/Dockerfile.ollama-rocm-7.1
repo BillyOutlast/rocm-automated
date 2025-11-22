@@ -12,11 +12,6 @@ ARG BUILD_OUTPUT_DIR="./ollama-build/ollama-build-output"
 ARG MOUNT_SOURCE_PATH="/ollama-src"
 ARG MOUNT_OUTPUT_PATH="/ollama-output"
 
-# Create mount points and output directories
-RUN mkdir -p ${MOUNT_SOURCE_PATH} \
-    && mkdir -p ${MOUNT_OUTPUT_PATH} \
-    && mkdir -p ${MOUNT_OUTPUT_PATH}/bin \
-    && mkdir -p ${MOUNT_OUTPUT_PATH}/lib
 
 # Clone the source repository (can be overridden by mounted source)
 RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /ollama-default
@@ -45,8 +40,8 @@ ENV PATH=/usr/local/go/bin:$PATH
 
 
 # Copy from mounted output to standard system locations for runtime
-RUN cp ${MOUNT_OUTPUT_PATH}/bin/ollama /usr/bin/ollama \
-    && cp -r ${MOUNT_OUTPUT_PATH}/lib/ollama /usr/lib/ollama \
+RUN cp ${BUILD_OUTPUT_DIR}/bin/ollama /usr/bin/ollama \
+    && cp -r ${BUILD_OUTPUT_DIR}/lib/ollama /usr/lib/ollama \
     && chmod +x /usr/bin/ollama
 
 
