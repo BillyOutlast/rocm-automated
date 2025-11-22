@@ -7,24 +7,12 @@ ARG ROCM7VERSION=7.1
 ARG CMAKEVERSION=3.31.2
 
 # Build configuration - paths matching build-ollama-binary.sh
-ARG SOURCE_DIR="./ollama-build/ollama-src"
-ARG BUILD_OUTPUT_DIR="./ollama-build/ollama-build-output"
+ARG SOURCE_DIR="../ollama-build/ollama-src"
+ARG BUILD_OUTPUT_DIR="../ollama-build/ollama-build-output"
 ARG MOUNT_SOURCE_PATH="/ollama-src"
 ARG MOUNT_OUTPUT_PATH="/ollama-output"
 
 
-# Clone the source repository (can be overridden by mounted source)
-RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /ollama-default
-# If source is mounted at MOUNT_SOURCE_PATH, use that; otherwise use cloned source
-RUN if [ -d "${MOUNT_SOURCE_PATH}/.git" ]; then \
-        echo "Using mounted source at ${MOUNT_SOURCE_PATH}"; \
-        ln -sf ${MOUNT_SOURCE_PATH} /ollama; \
-    else \
-        echo "Using cloned source"; \
-        ln -sf /ollama-default /ollama; \
-    fi
-
-WORKDIR /ollama
 
 # Install CMake
 ARG CMAKEVERSION
