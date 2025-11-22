@@ -19,7 +19,7 @@ BASE_DIR="./sd.cpp-webui"
 echo "📁 Creating output directories..."
 mkdir -p "${BASE_DIR}/outputs/any2video"
 mkdir -p "${BASE_DIR}/outputs/img2img"
-mkdir -p "${BASE_DIR}/outputs/imgedit"
+mkdir -p "${BASE_DIR}/outputs/imgedit"  
 mkdir -p "${BASE_DIR}/outputs/txt2img"
 mkdir -p "${BASE_DIR}/outputs/upscale"
 

@@ -114,6 +114,7 @@ services:
     group_add:
       - video
     environment:
+      - ROCR_VISIBLE_DEVICES=1
       - COMFYUI_ENABLE_ROCM=True
     restart: unless-stopped
     security_opt:
