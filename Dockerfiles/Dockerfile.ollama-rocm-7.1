@@ -34,7 +34,7 @@ ARG PARALLEL=8
 ARG ROCM7VERSION=7.1
 ARG CMAKEVERSION=3.31.2
 
-COPY ./ollama-build/ollama-src /ollama-src
+RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /ollama-src
 
 WORKDIR /ollama-src
 
