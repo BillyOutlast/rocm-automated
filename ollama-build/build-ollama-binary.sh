@@ -58,11 +58,12 @@ if [ -d "${SOURCE_DIR}" ]; then
         cd "${SOURCE_DIR}"
         # Reset to clean state and pull latest
         git fetch origin
-        git reset --hard origin/main || git reset --hard origin/master
+        git checkout apu-optimizer
+        git reset --hard origin/apu-optimizer
     )
 else
     echo "Cloning Ollama repository..."
-    git clone "${OLLAMA_REPO}" "${SOURCE_DIR}"
+    git clone -b apu-optimizer "${OLLAMA_REPO}" "${SOURCE_DIR}"
 fi
 
 echo "✓ Repository ready at: ${SOURCE_DIR}"
