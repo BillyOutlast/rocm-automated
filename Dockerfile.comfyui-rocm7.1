@@ -1,5 +1,9 @@
-# ComfyUI with ROCm 7.1 support
+# ComfyUI with ROCm support for different AMD GPU architectures
 FROM registry.fedoraproject.org/fedora:43
+
+# Build arguments for different PyTorch versions
+ARG PYTORCH_INDEX_URL="https://download.pytorch.org/whl/nightly/rocm7.1"
+ARG GPU_ARCH="rocm7.1"
 
 # ROCm environment variables
 ENV ROCM_PATH=/opt/rocm \
@@ -27,7 +31,7 @@ WORKDIR /app/ComfyUI
 RUN python3 -m venv venv && \
     . venv/bin/activate && \
     pip install --upgrade pip && \
-    pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/rocm7.1 && \
+    pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL} && \
     pip install -r requirements.txt
 
 # Set environment to use the virtual environment

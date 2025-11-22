@@ -102,32 +102,23 @@ echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
-print_step "Building Stable Diffusion ROCm 7.1 image..."
-echo -e "${YELLOW}Command: podman build -t stable-diffusion.cpp-rocm7.1:gfx1151 -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151${NC}"
-if podman build -t stable-diffusion.cpp-rocm7.1:gfx1151 -f Dockerfile.stable-diffusion.cpp-rocm7.1-gfx1151; then
-    print_success "Stable Diffusion ROCm 7.1 image built successfully"
+print_step "Building ComfyUI variants for different GPU architectures..."
+echo -e "${YELLOW}Command: bash ./build-comfyui-variants.sh${NC}"
+if bash ./build-comfyui-variants.sh; then
+    print_success "ComfyUI variants built successfully"
 else
-    print_error "Failed to build Stable Diffusion ROCm 7.1 image"
+    print_error "Failed to build ComfyUI variants"
     exit 1
 fi
 
-print_step "Tagging Stable Diffusion image for registry..."
-if podman tag stable-diffusion.cpp-rocm7.1:gfx1151 ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151; then
-    print_success "Tagged: ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151"
+print_step "Building Stable-Diffusion variants for different GPU architectures..."
+echo -e "${YELLOW}Command: bash ./build-stable-diffusion-variants.sh${NC}"
+if bash ./build-stable-diffusion-variants.sh; then
+    print_success "Stable-Diffusion variants built successfully"
 else
-    print_error "Failed to tag Stable Diffusion image"
+    print_error "Failed to build Stable-Diffusion variants"
     exit 1
 fi
-
-print_step "Pushing Stable Diffusion image to registry..."
-if podman push ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151; then
-    print_success "Pushed: ${REGISTRY}/stable-diffusion.cpp-rocm7.1:gfx1151"
-else
-    print_error "Failed to push Stable Diffusion image"
-    exit 1
-fi
-
-
 
 echo ""
 echo -e "${GREEN}🎉 All images built and pushed successfully! 🎉${NC}"
@@ -135,5 +126,4 @@ echo ""
 echo -e "${CYAN}Images available at:${NC}"
 echo -e "  • https://hub.docker.com/r/getterup/${FEDORA_IMAGE}"
 echo -e "  • https://hub.docker.com/r/getterup/${OLLAMA_IMAGE}"
-echo -e "  • https://hub.docker.com/r/getterup/stable-diffusion.cpp-rocm7.1:gfx1151"
 echo ""
