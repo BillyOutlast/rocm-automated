@@ -17,6 +17,7 @@ NC='\033[0m' # No Color
 REGISTRY="docker.io/getterup"
 FEDORA_IMAGE="fedora-rocm7.1"
 OLLAMA_IMAGE="ollama-rocm7.1"
+Dockerfiles_DIR="./Dockerfiles"
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}    ROCm 7.1 Docker Build Script      ${NC}"
@@ -45,8 +46,8 @@ if ! command -v podman &> /dev/null; then
 fi
 
 print_step "Building Fedora ROCm 7.1 base image..."
-echo -e "${YELLOW}Command: podman build -t ${FEDORA_IMAGE}:latest -f Dockerfile.rocm-7.1${NC}"
-if podman build -t "${FEDORA_IMAGE}:latest" -f Dockerfile.rocm-7.1; then
+echo -e "${YELLOW}Command: podman build -t ${FEDORA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.rocm-7.1${NC}"
+if podman build -t "${FEDORA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.rocm-7.1"; then
     print_success "Fedora ROCm 7.1 image built successfully"
 else
     print_error "Failed to build Fedora ROCm 7.1 image"
@@ -74,8 +75,8 @@ echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
 print_step "Building Ollama ROCm 7.1 image..."
-echo -e "${YELLOW}Command: podman build -t ${OLLAMA_IMAGE}:latest -f Dockerfile.ollama-rocm-7.1${NC}"
-if podman build -t "${OLLAMA_IMAGE}:latest" -f Dockerfile.ollama-rocm-7.1; then
+echo -e "${YELLOW}Command: podman build -t ${OLLAMA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1${NC}"
+if podman build -t "${OLLAMA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1"; then
     print_success "Ollama ROCm 7.1 image built successfully"
 else
     print_error "Failed to build Ollama ROCm 7.1 image"

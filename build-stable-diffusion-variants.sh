@@ -15,6 +15,8 @@ NC='\033[0m' # No Color
 # Configuration
 REGISTRY="docker.io/getterup"
 BASE_IMAGE_NAME="stable-diffusion-cpp"
+Dockerfiles_DIR="./Dockerfiles"
+
 
 # Function to print step
 print_step() {
@@ -61,11 +63,11 @@ for gfx_name in "${!GFX_ARCHITECTURES[@]}"; do
     image_tag="${REGISTRY}/${BASE_IMAGE_NAME}:${gfx_name}"
     
     print_step "Building for ${gfx_name} - ${architecture_desc}..."
-    echo -e "${YELLOW}Command: podman build -t ${image_tag} --build-arg GFX_NAME=${gfx_name} -f Dockerfile.stable-diffusion.cpp-rocm7.1 .${NC}"
+    echo -e "${YELLOW}Command: podman build -t ${image_tag} --build-arg GFX_NAME=${gfx_name} -f ${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1 .${NC}"
     
     if podman build -t "${image_tag}" \
         --build-arg GFX_NAME="${gfx_name}" \
-        -f Dockerfile.stable-diffusion.cpp-rocm7.1 .; then
+        -f "${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1" .; then
         print_success "Built ${image_tag} successfully"
     else
         print_error "Failed to build ${image_tag}"
