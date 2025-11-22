@@ -24,8 +24,11 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
 # ROCm environment variables
 ENV ROCM_PATH=/opt/rocm \
     HIP_PATH=/opt/rocm \
+    HSA_PATH=/opt/rocm/hsa \
     HIP_CLANG_PATH=/opt/rocm/llvm/bin \
     HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
+    HSA_ENABLE_SDMA=0 \
+    HSA_OVERRIDE_GFX_VERSION=10.3.0 \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 ARG FLAVOR=rocm
@@ -63,10 +66,12 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 RUN cp -R dist/lib/ollama /usr/lib/ollama
 
 
-# Set executable permissions
-RUN chmod +x /usr/bin/ollama
+# Set executable permissions and create rocm_v7 symlink
+RUN chmod +x /usr/bin/ollama \
+    && ln -sf /usr/lib/ollama/rocm /usr/lib/ollama/rocm_v7 \
+    && rocminfo || echo "rocminfo failed - will work at runtime with GPU access"
 
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH 
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollama/rocm:/usr/lib/ollama/rocm_v7:$LD_LIBRARY_PATH 
 
 
 # Expose port
