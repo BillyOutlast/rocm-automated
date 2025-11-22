@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # ROCm 7.1 Docker Build and Push Script
-
 # Builds and pushes fedora-rocm7.1 and ollama-rocm7.1 images
 
 set -e
