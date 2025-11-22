@@ -78,7 +78,7 @@ services:
       - seccomp=unconfined
       - label=disable
   comfyui:
-    image: getterup/comfyui-rocm7.1:latest
+    image: getterup/comfyui:rocm7.1
     container_name: comfyui
     ports:
       - "8188:8188"
