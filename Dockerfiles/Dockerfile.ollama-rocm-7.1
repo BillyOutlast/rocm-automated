@@ -3,7 +3,7 @@ FROM docker.io/getterup/fedora-rocm7.1:latest
 
 
 # Build configuration - paths matching build-ollama-binary.sh
-ARG BUILD_OUTPUT_DIR="../ollama-build/ollama-build-output"
+ARG BUILD_OUTPUT_DIR="./ollama-build/ollama-build-output"
 
 # Copy from mounted output to standard system locations for runtime
 RUN cp ${BUILD_OUTPUT_DIR}/bin/ollama /usr/bin/ollama \

@@ -16,6 +16,7 @@ MOUNT_SOURCE_PATH="/ollama-src"
 MOUNT_OUTPUT_PATH="/ollama-output"
 PARALLEL=${PARALLEL:-8}
 CMAKEVERSION=${CMAKEVERSION:-3.31.2}
+GOMODCACHE=${SCRIPT_DIR}/go-mod-cache
 
 echo "=== Ollama Build Script ==="
 
@@ -43,6 +44,7 @@ echo "✓ Required tools found: podman, git"
 mkdir -p "${BUILD_OUTPUT_DIR}"
 mkdir -p "${BUILD_OUTPUT_DIR}/bin"
 mkdir -p "${BUILD_OUTPUT_DIR}/lib"
+mkdir -p "${GOMODCACHE}"
 
 # Clean up existing container if it exists
 if podman ps -a --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
@@ -135,6 +137,7 @@ curl -fsSL https://golang.org/dl/go\$(awk '/^go/ { print \$2 }' go.mod).linux-\$
 export PATH=/usr/local/go/bin:\$PATH
 
 echo '=== Downloading Go dependencies ==='
+export GOMODCACHE=${GOMODCACHE}
 go mod download 
 
 echo '=== Building Ollama binary ==='
