@@ -71,6 +71,10 @@ WORKDIR /sd-webui
 # Create directories for models and outputs
 RUN mkdir -p /sd-webui/models /sd-webui/outputs
 
+RUN dnf remove -y python3.14
+WORKDIR /sd-webui
+RUN dnf install -y python3.13 gcc gcc-c++ wget
+
 # Expose web UI port
 EXPOSE 7860
 
