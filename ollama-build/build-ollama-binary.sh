@@ -7,8 +7,11 @@ set -e
 OLLAMA_REPO="https://github.com/rjmalagon/ollama-linux-amd-apu.git"
 BASE_IMAGE="docker.io/getterup/fedora-rocm7.1:latest"
 CONTAINER_NAME="ollama-build"
-SOURCE_DIR="./ollama-build/ollama-src"
-BUILD_OUTPUT_DIR="./ollama-build/ollama-build-output"
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_DIR="${SCRIPT_DIR}/ollama-src"
+BUILD_OUTPUT_DIR="${SCRIPT_DIR}/ollama-build-output"
 MOUNT_SOURCE_PATH="/ollama-src"
 MOUNT_OUTPUT_PATH="/ollama-output"
 PARALLEL=${PARALLEL:-8}
@@ -51,11 +54,12 @@ fi
 # Clone or update the repository
 if [ -d "${SOURCE_DIR}" ]; then
     echo "Source directory exists, updating repository..."
-    cd "${SOURCE_DIR}"
-    # Reset to clean state and pull latest
-    git fetch origin
-    git reset --hard origin/main || git reset --hard origin/master
-    cd ..
+    (
+        cd "${SOURCE_DIR}"
+        # Reset to clean state and pull latest
+        git fetch origin
+        git reset --hard origin/main || git reset --hard origin/master
+    )
 else
     echo "Cloning Ollama repository..."
     git clone "${OLLAMA_REPO}" "${SOURCE_DIR}"
