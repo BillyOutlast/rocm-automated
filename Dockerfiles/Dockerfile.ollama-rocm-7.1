@@ -36,6 +36,8 @@ ARG CMAKEVERSION=3.31.2
 
 COPY ./ollama-build/ollama-src /ollama-src
 
+WORKDIR /ollama-src
+
 ARG CMAKEVERSION
 RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKEVERSION}/cmake-${CMAKEVERSION}-linux-$(uname -m).tar.gz | tar xz -C /usr/local --strip-components 1
 ENV LDFLAGS=-s
