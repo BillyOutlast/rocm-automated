@@ -83,8 +83,8 @@ else
     print_error "Failed to build Ollama binary"
     exit 1
 fi
-echo -e "${YELLOW}Command: podman build -t ${OLLAMA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1${NC}"
-if podman build -t "${OLLAMA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1"; then
+echo -e "${YELLOW}Command: podman build -t ${OLLAMA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1 .${NC}"
+if podman build -t "${OLLAMA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1" .; then
     print_success "Ollama ROCm 7.1 image built successfully"
 else
     print_error "Failed to build Ollama ROCm 7.1 image"

@@ -2,12 +2,11 @@ FROM docker.io/getterup/fedora-rocm7.1:latest
 # vim: filetype=dockerfile
 
 # Copy built ollama binary and libraries from build output
-COPY ollama-build/ollama-build-output/bin/ollama /usr/bin/ollama
-COPY ollama-build/ollama-build-output/lib/ollama /usr/lib/ollama
+COPY ./ollama-build/ollama-build-output/bin/ollama /usr/bin/ollama
+COPY ./ollama-build/ollama-build-output/lib/ollama /usr/lib/ollama
 
 # Set executable permissions
 RUN chmod +x /usr/bin/ollama
-
 
 # ROCm environment variables for runtime
 ENV ROCM_PATH=/opt/rocm \
