@@ -7,8 +7,8 @@ set -e
 OLLAMA_REPO="https://github.com/rjmalagon/ollama-linux-amd-apu.git"
 BASE_IMAGE="docker.io/getterup/fedora-rocm7.1:latest"
 CONTAINER_NAME="ollama-build"
-SOURCE_DIR="./ollama-src"
-BUILD_OUTPUT_DIR="./ollama-build-output"
+SOURCE_DIR="./ollama-build/ollama-src"
+BUILD_OUTPUT_DIR="./ollama-build/ollama-build-output"
 MOUNT_SOURCE_PATH="/ollama-src"
 MOUNT_OUTPUT_PATH="/ollama-output"
 PARALLEL=${PARALLEL:-8}
@@ -64,14 +64,8 @@ fi
 echo "✓ Repository ready at: ${SOURCE_DIR}"
 
 # Get absolute paths for mounting
-if command -v realpath >/dev/null 2>&1; then
-    ABSOLUTE_SOURCE_PATH=$(realpath "${SOURCE_DIR}")
-    ABSOLUTE_OUTPUT_PATH=$(realpath "${BUILD_OUTPUT_DIR}")
-else
-    # Fallback for systems without realpath
-    ABSOLUTE_SOURCE_PATH=$(cd "${SOURCE_DIR}" && pwd)
-    ABSOLUTE_OUTPUT_PATH=$(mkdir -p "${BUILD_OUTPUT_DIR}" && cd "${BUILD_OUTPUT_DIR}" && pwd)
-fi
+ABSOLUTE_SOURCE_PATH=$(realpath "${SOURCE_DIR}")
+ABSOLUTE_OUTPUT_PATH=$(realpath "${BUILD_OUTPUT_DIR}")
 echo "Source path: ${ABSOLUTE_SOURCE_PATH}"
 echo "Output path: ${ABSOLUTE_OUTPUT_PATH}"
 
