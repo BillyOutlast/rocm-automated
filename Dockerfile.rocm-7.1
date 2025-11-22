@@ -26,6 +26,16 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
       git-core vim sudo rsync \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+  --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
+  install \
+    rocm-runtime rocm-device-libs hip-runtime-amd \
+    rocblas hipblas rocminfo \
+    gcc gcc-c++ \
+    ca-certificates \
+    bash \
+&& dnf clean all && rm -rf /var/cache/dnf/*
+
 # rocm env
 ENV ROCM_PATH=/opt/rocm \
     HIP_PATH=/opt/rocm \
