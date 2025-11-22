@@ -36,6 +36,8 @@ ARG PARALLEL=8
 
 ARG ROCM7VERSION=7.1
 ARG CMAKEVERSION=3.31.2
+ARG GPU_TARGETS="gfx940;gfx941;gfx942;gfx1010;gfx1012;gfx1030;gfx1100;gfx1101;gfx1102;gfx1151;gfx1200;gfx1201;gfx908:xnack-;gfx90a:xnack+;gfx90a:xnack-"
+
 
 RUN git clone https://github.com/rjmalagon/ollama-linux-amd-apu.git /ollama-src
 
