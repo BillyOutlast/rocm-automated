@@ -83,11 +83,6 @@ ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollam
     OLLAMA_KV_CACHE_TYPE="q8_0" \
     OLLAMA_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm_v7
 
-# Create video and render groups with proper permissions for GPU access
-RUN groupadd -g 44 video || true && \
-    groupadd -g 109 render || true && \
-    mkdir -p /dev/dri && \
-    chmod 666 /dev/null
  
 # Expose port
 EXPOSE 11434
