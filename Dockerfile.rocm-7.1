@@ -20,7 +20,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
     install \
       make gcc cmake lld clang clang-devel compiler-rt libcurl-devel ninja-build \
-      rocm-llvm rocm-device-libs hip-runtime-amd hip-devel \
+      rocm-llvm rocm-device-libs hip-runtime-amd hip-devel rocm-dev rocm-libs rocm-libs-rpath \
       rocblas rocblas-devel hipblas hipblas-devel rocm-cmake libomp-devel libomp \
       rocminfo radeontop \
       git-core vim sudo rsync \
