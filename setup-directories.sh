@@ -6,6 +6,8 @@ set -e
 
 mkdir -p ./open-webui
 
+mkdir -p ./ollama
+
 echo "🚀 Setting up Stable Diffusion WebUI directory structure..."
 
 mkdir -p ./sd.cpp-webui
