@@ -32,59 +32,11 @@ ARG CGO_CXXFLAGS
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -o /bin/ollama .
 
-# Runtime stage with proper ROCm support
-FROM registry.fedoraproject.org/fedora:43 AS runtime
 
-# Install ROCm runtime and dependencies
-RUN <<'EOF'
-tee /etc/yum.repos.d/rocm.repo <<REPO
-[ROCm-7.1]
-name=ROCm7.1
-baseurl=https://repo.radeon.com/rocm/el9/7.1/main
-enabled=1
-priority=50
-gpgcheck=1
-gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
-REPO
-EOF
+COPY dist/lib/ollama /lib/ollama
 
-RUN dnf -y --nodocs --setopt=install_weak_deps=False \
-    --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
-    install \
-      rocm-runtime rocm-device-libs hip-runtime-amd \
-      rocblas hipblas rocminfo \
-      ca-certificates \
- && dnf clean all && rm -rf /var/cache/dnf/*
-
-# ROCm environment variables
-ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm \
-    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
-
-# Copy built ollama binary and libraries
-COPY --from=builder /bin/ollama /usr/bin/ollama
-COPY --from=builder /tmp/ollama-src/dist/lib/ollama /usr/lib/ollama
-
-# Set up library paths and environment
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH 
-
-# Expose port
+ENV LD_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm
+ENV OLLAMA_HOST=0.0.0.0:11434
 EXPOSE 11434
-
-# Add startup script to ensure proper GPU access
-RUN echo '#!/bin/bash\n\
-# Check for ROCm devices\n\
-if [ -d "/dev/kfd" ] && [ -d "/dev/dri" ]; then\n\
-    echo "ROCm devices detected"\n\
-    rocminfo 2>/dev/null || echo "Warning: rocminfo failed"\n\
-else\n\
-    echo "Warning: ROCm devices not found. Ensure Docker has GPU access."\n\
-fi\n\
-\n\
-exec "$@"' > /usr/local/bin/docker-entrypoint.sh \
-    && chmod +x /usr/local/bin/docker-entrypoint.sh
-
-ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["/usr/bin/ollama", "serve"]
+ENTRYPOINT ["/bin/ollama"]
+CMD ["serve"]
