@@ -1,0 +1,41 @@
+# ComfyUI with ROCm 7.1 support
+FROM registry.fedoraproject.org/fedora:43
+
+# ROCm environment variables
+ENV ROCM_PATH=/opt/rocm \
+    HIP_PATH=/opt/rocm \
+    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
+    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
+    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
+
+# Install system dependencies
+RUN dnf update -y && \
+    dnf install -y git python3 python3-pip python3-venv && \
+    dnf clean all
+
+# Set up library paths and environment
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
+
+# Clone ComfyUI repository
+WORKDIR /app
+RUN git clone https://github.com/comfyanonymous/ComfyUI
+
+# Set working directory to ComfyUI
+WORKDIR /app/ComfyUI
+
+# Create and activate virtual environment, then install dependencies
+RUN python3 -m venv venv && \
+    . venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/rocm7.1 && \
+    pip install -r requirements.txt
+
+# Set environment to use the virtual environment
+ENV PATH="/app/ComfyUI/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/app/ComfyUI/venv"
+
+# Expose default ComfyUI port
+EXPOSE 8188
+
+# Set the default command to run ComfyUI
+CMD ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188"] 
