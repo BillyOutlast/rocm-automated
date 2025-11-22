@@ -17,8 +17,6 @@ RUN dnf update -y && \
     dnf install -y git python3 python3-pip && \
     dnf clean all
 
-RUN groupadd -g 44 video || true
-
 # Set up library paths and ROCm environment
 ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH \
     HIP_VISIBLE_DEVICES=0 \

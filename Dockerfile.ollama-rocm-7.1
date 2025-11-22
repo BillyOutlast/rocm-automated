@@ -56,8 +56,6 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
       ca-certificates \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
-RUN groupadd -g 44 video || true
-
 # ROCm environment variables
 ENV ROCM_PATH=/opt/rocm \
     HIP_PATH=/opt/rocm \

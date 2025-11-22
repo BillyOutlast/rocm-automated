@@ -35,7 +35,6 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     bash wget \
 && dnf clean all && rm -rf /var/cache/dnf/*
 
-RUN groupadd -g 44 video || true
 # rocm env
 ENV ROCM_PATH=/opt/rocm \
     HIP_PATH=/opt/rocm \
