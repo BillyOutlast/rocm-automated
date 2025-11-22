@@ -6,6 +6,8 @@
 
 A comprehensive Docker-based environment for running AI workloads on AMD GPUs with ROCm 7.1 support. This project provides optimized containers for Ollama LLM inference and Stable Diffusion image generation.
 
+Sponsored by https://shad-base.com
+
 ## 🚀 Features
 
 - **ROCm 7.1 Support**: Latest AMD GPU compute platform
