@@ -5,9 +5,8 @@ FROM docker.io/getterup/fedora-rocm7.1:latest
 COPY ./ollama-build/ollama-build-output/bin/ollama /usr/bin/ollama
 COPY ./ollama-build/ollama-build-output/lib/ollama /usr/lib/ollama
 
-# Set executable permissions and create rocm_v7 symlink
-RUN chmod +x /usr/bin/ollama \
-    && ln -sf /usr/lib/ollama/rocm /usr/lib/ollama/rocm_v7
+# Set executable permissions
+RUN chmod +x /usr/bin/ollama
 
 # ROCm environment variables for runtime
 ENV ROCM_PATH=/opt/rocm \
