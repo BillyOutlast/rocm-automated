@@ -16,10 +16,7 @@ ENV ROCM_PATH=/opt/rocm \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 # Set up library paths and environment
-#ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm_v7:$LD_LIBRARY_PATH 
-
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
-ENV NVIDIA_VISIBLE_DEVICES=all
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH
 
 # Expose port
 ENV OLLAMA_HOST=0.0.0.0:11434
