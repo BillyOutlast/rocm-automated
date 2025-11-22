@@ -12,13 +12,18 @@ ENV ROCM_PATH=/opt/rocm \
     HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
-# Install system dependencies
+# Install system dependencies and ROCm
 RUN dnf update -y && \
-    dnf install -y git python3 python3-pip && \
+    dnf install -y git python3 python3-pip rocm-dev rocm-libs && \
     dnf clean all
 
-# Set up library paths and environment
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
+# Set up library paths and ROCm environment
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH \
+    HIP_VISIBLE_DEVICES=0 \
+    AMD_SERIALIZE_KERNEL=3 \
+    PYTORCH_ROCM_ARCH="${GPU_ARCH}" \
+    HSA_OVERRIDE_GFX_VERSION="${GPU_ARCH}" \
+    TORCH_USE_HIP_DSA=1
 
 # Clone ComfyUI repository
 WORKDIR /app
@@ -36,14 +41,20 @@ RUN python3 -m venv venv && \
     else \
         pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
     fi && \
-    pip install -r requirements.txt
+    pip install -r requirements.txt && \
+    pip install opencv-python gguf
 
-# Set environment to use the virtual environment
-ENV PATH="/app/ComfyUI/venv/bin:$PATH"
-ENV VIRTUAL_ENV="/app/ComfyUI/venv"
+# Set environment to use the virtual environment and add ROCm runtime settings
+ENV PATH="/app/ComfyUI/venv/bin:$PATH" \
+    VIRTUAL_ENV="/app/ComfyUI/venv" \
+    AMD_SERIALIZE_KERNEL=3 \
+    HIP_VISIBLE_DEVICES=0 \
+    PYTORCH_ROCM_ARCH="${GPU_ARCH}" \
+    HSA_OVERRIDE_GFX_VERSION="${GPU_ARCH}" \
+    TORCH_USE_HIP_DSA=1
 
 # Expose default ComfyUI port
 EXPOSE 8188
 
-# Set the default command to run ComfyUI
-CMD ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188"] 
+# Set the default command to run ComfyUI with ROCm optimizations
+CMD ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188", "--force-fp16"] 
