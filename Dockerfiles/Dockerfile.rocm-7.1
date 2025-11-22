@@ -15,6 +15,8 @@ gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
 REPO
 EOF
 
+
+
 # Install base build tools and utilities
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     install \
@@ -54,6 +56,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     install \
       libcurl-devel golang \
+      vulkan-headers vulkan-loader vulkan-loader-devel \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
 # Set ROCm base paths
