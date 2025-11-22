@@ -52,7 +52,9 @@ fi
 if [ -d "${SOURCE_DIR}" ]; then
     echo "Source directory exists, updating repository..."
     cd "${SOURCE_DIR}"
-    git pull origin main || git pull origin master
+    # Reset to clean state and pull latest
+    git fetch origin
+    git reset --hard origin/main || git reset --hard origin/master
     cd ..
 else
     echo "Cloning Ollama repository..."
