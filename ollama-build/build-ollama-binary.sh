@@ -130,6 +130,9 @@ cmake --install build --component HIP --strip --parallel \${PARALLEL}
 echo '=== Cleaning up ROCM libraries ==='
 rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
 
+echo '=== Copying Go files ==='
+cp go.mod go.sum ./
+
 echo '=== Installing Go ==='
 curl -fsSL https://golang.org/dl/go\$(awk '/^go/ { print \$2 }' go.mod).linux-\$(case \$(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
 export PATH=/usr/local/go/bin:\$PATH
