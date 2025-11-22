@@ -33,7 +33,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -o /bin/ollama .
 
 # Runtime stage with proper ROCm support
-FROM registry.fedoraproject.org/fedora:43 AS runtime
+FROM docker.io/getterup/fedora-rocm7.1:latest AS builder
 
 # Install ROCm runtime and dependencies
 RUN <<'EOF'
@@ -52,7 +52,8 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
     install \
       rocm-runtime rocm-device-libs hip-runtime-amd \
-      rocblas hipblas rocminfo \
+      rocblas hipblas rocminfo rocm-smi \
+      hsa-rocr hsa-rocr-dev \
       ca-certificates \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
