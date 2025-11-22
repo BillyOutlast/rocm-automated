@@ -33,7 +33,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -o /bin/ollama .
 
 # Runtime stage with proper ROCm support
-FROM registry.fedoraproject.org/fedora:43 AS runtime
+FROM docker.io/getterup/fedora-rocm7.1:latest AS runtime
 
 # Install ROCm runtime and dependencies
 RUN <<'EOF'
@@ -69,8 +69,10 @@ COPY --from=builder /tmp/ollama-src/dist/lib/ollama /usr/lib/ollama
 
 # Set up library paths and environment
 ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH 
-
+ 
 # Expose port
 EXPOSE 11434
-
-ENTRYPOINT ["/usr/bin/ollama", "serve"]
+ENV OLLAMA_HOST=0.0.0.0:11434
+EXPOSE 11434
+ENTRYPOINT ["/usr/bin/ollama"]
+CMD ["serve"]
