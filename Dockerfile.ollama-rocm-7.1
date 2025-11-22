@@ -54,7 +54,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     install \
       rocm-runtime rocm-device-libs hip-runtime-amd \
       rocblas hipblas rocminfo \
-      libdrm-devel mesa-libdrm \
+      libdrm-devel \
       ca-certificates \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
