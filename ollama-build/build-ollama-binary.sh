@@ -87,6 +87,7 @@ podman run -d \
     --hostname ollama-build \
     -v "${ABSOLUTE_SOURCE_PATH}:${MOUNT_SOURCE_PATH}:Z" \
     -v "${ABSOLUTE_OUTPUT_PATH}:${MOUNT_OUTPUT_PATH}:Z" \
+    -v "${GOMODCACHE}:/go-mod-cache:Z" \
     --device /dev/kfd:/dev/kfd \
     --device /dev/dri:/dev/dri \
     --group-add video \
@@ -137,7 +138,7 @@ curl -fsSL https://golang.org/dl/go\$(awk '/^go/ { print \$2 }' go.mod).linux-\$
 export PATH=/usr/local/go/bin:\$PATH
 
 echo '=== Downloading Go dependencies ==='
-export GOMODCACHE=${GOMODCACHE}
+export GOMODCACHE=/go
 go mod download 
 
 echo '=== Building Ollama binary ==='
