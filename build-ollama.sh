@@ -9,7 +9,7 @@ OLLAMA_REPO="https://github.com/rjmalagon/ollama-linux-amd-apu.git"
 BASE_IMAGE="docker.io/getterup/fedora-rocm7.1:latest"
 CONTAINER_NAME="ollama-dev"
 SOURCE_DIR="./ollama-src"
-MOUNT_PATH="/ollama-src"
+MOUNT_PATH="/ollama-src"    
 
 echo "=== Ollama Development Environment Setup ==="
 

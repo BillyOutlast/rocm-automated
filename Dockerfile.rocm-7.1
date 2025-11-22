@@ -15,40 +15,66 @@ gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
 REPO
 EOF
 
-# deps
+# Install base build tools and utilities
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     install \
-      make gcc cmake lld clang clang-devel compiler-rt libcurl-devel ninja-build \
-      rocm-llvm rocm-device-libs hip-runtime-amd hip-devel rocm-dev rocm-libs \
-      rocblas rocblas-devel hipblas hipblas-devel rocm-cmake libomp-devel libomp \
-      rocminfo radeontop gcc-c++ golang rocm-runtime \
-      git-core vim sudo rsync rocm-smi hsa-rocr ca-certificates \
-      git cmake gcc-c++ golang curl wget \
+      make gcc gcc-c++ cmake ninja-build \
+      git-core vim sudo rsync curl wget bash ca-certificates \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
+# Install LLVM/Clang toolchain
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
-  --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
-  install \
-    rocm-runtime rocm-device-libs hip-runtime-amd \
-    rocblas hipblas rocminfo \
-    gcc gcc-c++ \
-    ca-certificates \
-    bash wget \
-&& dnf clean all && rm -rf /var/cache/dnf/*
+    install \
+      lld clang clang-devel compiler-rt \
+      rocm-llvm \
+ && dnf clean all && rm -rf /var/cache/dnf/*
 
-# rocm env
+# Install ROCm runtime components
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+    install \
+      rocm-runtime rocm-device-libs hip-runtime-amd \
+      hsa-rocr rocminfo rocm-smi radeontop \
+ && dnf clean all && rm -rf /var/cache/dnf/*
+
+# Install ROCm development libraries
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+    install \
+      hip-devel rocm-dev rocm-libs rocm-cmake \
+      libomp-devel libomp \
+ && dnf clean all && rm -rf /var/cache/dnf/*
+
+# Install ROCm math libraries
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+    install \
+      rocblas rocblas-devel \
+      hipblas hipblas-devel \
+ && dnf clean all && rm -rf /var/cache/dnf/*
+
+# Install additional development dependencies
+RUN dnf -y --nodocs --setopt=install_weak_deps=False \
+    install \
+      libcurl-devel golang \
+ && dnf clean all && rm -rf /var/cache/dnf/*
+
+# Set ROCm base paths
 ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm \
-    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
+    HIP_PATH=/opt/rocm
+
+# Set ROCm toolchain paths
+ENV HIP_CLANG_PATH=/opt/rocm/llvm/bin \
+    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode
+
+# Update PATH with ROCm binaries
+ENV PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 
-# profile
+# Create ROCm environment profile
 RUN printf '%s\n' \
   'export ROCBLAS_USE_HIPBLASLT=1' \
-  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh \
-  && echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
+  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh
+
+# Configure bash to load ROCm profile
+RUN echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
 
 # shell
 CMD ["/bin/bash"]
