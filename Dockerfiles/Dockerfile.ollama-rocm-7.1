@@ -1,32 +1,9 @@
 FROM docker.io/getterup/fedora-rocm7.1:latest
 # vim: filetype=dockerfile
 
-ARG FLAVOR=rocm
-ARG PARALLEL=8
-ARG ROCM7VERSION=7.1
-ARG CMAKEVERSION=3.31.2
 
 # Build configuration - paths matching build-ollama-binary.sh
-ARG SOURCE_DIR="../ollama-build/ollama-src"
 ARG BUILD_OUTPUT_DIR="../ollama-build/ollama-build-output"
-ARG MOUNT_SOURCE_PATH="/ollama-src"
-ARG MOUNT_OUTPUT_PATH="/ollama-output"
-
-COPY ${SOURCE_DIR} ${MOUNT_SOURCE_PATH}
-
-
-# Install CMake
-ARG CMAKEVERSION
-RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKEVERSION}/cmake-${CMAKEVERSION}-linux-$(uname -m).tar.gz | tar xz -C /usr/local --strip-components 1
-ENV LDFLAGS=-s
-
-# Set build environment with ROCm paths
-ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
-
-# Install Go based on go.mod version
-RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
-ENV PATH=/usr/local/go/bin:$PATH
-
 
 # Copy from mounted output to standard system locations for runtime
 RUN cp ${BUILD_OUTPUT_DIR}/bin/ollama /usr/bin/ollama \
