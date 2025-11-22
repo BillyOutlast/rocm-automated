@@ -63,7 +63,6 @@ COPY --from=builder /sd-webui /sd-webui
 ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH \
     PYTHON=/usr/bin/python3.13 \
     PYTHON3=/usr/bin/python3.13 \
-    PIP=/usr/bin/pip3.13 \
     PYTHONPATH=/usr/lib/python3.13/site-packages \
     # Force PyO3 to use Python 3.13
     PYO3_PYTHON=/usr/bin/python3.13 \
