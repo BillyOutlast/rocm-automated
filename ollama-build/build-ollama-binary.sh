@@ -125,6 +125,13 @@ export PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:
 export LDFLAGS=-s
 export PARALLEL=${PARALLEL}
 
+export HSA_OVERRIDE_GFX_VERSION_0=10.3.0
+export HSA_OVERRIDE_GFX_VERSION_1=11.0.0
+export HSA_OVERRIDE_GFX_VERSION_2=11.0.1
+export HSA_OVERRIDE_GFX_VERSION_2=11.0.2
+export HSA_OVERRIDE_GFX_VERSION_3=11.5.0
+export HSA_OVERRIDE_GFX_VERSION_4=11.5.1
+
 echo '=== Running CMake build ==='
 cmake --preset 'ROCm 7' -DOLLAMA_RUNNER_DIR=\"rocm_v7\"
 cmake --build --parallel \${PARALLEL} --preset 'ROCm 7'
