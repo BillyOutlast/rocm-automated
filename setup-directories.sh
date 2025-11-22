@@ -1,10 +1,14 @@
 #!/bin/bash
-# Setup script for Stable Diffusion WebUI directories
-# This script creates all necessary directories for sd.cpp-webui Docker volumes
+# Setup script for docker directories
+# This script creates all necessary directories for  Docker volumes
 
 set -e
 
+mkdir -p ./open-webui
+
 echo "🚀 Setting up Stable Diffusion WebUI directory structure..."
+
+mkdir -p ./sd.cpp-webui
 
 # Define base directory
 BASE_DIR="./sd.cpp-webui"

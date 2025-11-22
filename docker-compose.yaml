@@ -1,4 +1,24 @@
 services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    environment:
+      - HOSTNAME=open-webui
+      - OLLAMA_BASE_URL=http://127.0.0.1:11434
+      - COMFYUI_BASE_URL=http://127.0.0.1:8188
+    ports:
+      - "0.0.0.0:3000:8080"
+    volumes:
+      - ./open-webui:/app/backend/data
+      - /etc/resolv.conf:/etc/resolv.conf:ro
+    restart: always
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+    security_opt:
+      - "label=disable"
   ollama:
     image: getterup/ollama-rocm7.1:latest
     container_name: ollama
