@@ -22,7 +22,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
       rocm-llvm rocm-device-libs hip-runtime-amd hip-devel rocm-dev rocm-libs \
       rocblas rocblas-devel hipblas hipblas-devel rocm-cmake libomp-devel libomp \
       rocminfo radeontop \
-      git-core vim sudo rsync \
+      git-core vim sudo rsync rocm-smi \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
