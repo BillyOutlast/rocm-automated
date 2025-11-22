@@ -31,10 +31,15 @@ services:
     group_add:
       - video
     environment:
+      - OLLAMA_VULKAN=0
       - OLLAMA_DEBUG=2
       - OLLAMA_FLASH_ATTENTION=true
-      - OLLAMA_KV_CACHE_TYPE="q8_0"
-      - ROCR_VISIBLE_DEVICES=0
+      - HSA_ENABLE_SDMA=0
+      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_GPU_OVERHEAD=0
+      - OLLAMA_KEEP_ALIVE=1h
     restart: unless-stopped
     cap_add:
       - SYS_PTRACE
