@@ -65,7 +65,7 @@ podman pull "${BASE_IMAGE}"
 echo "Creating development container..."
 podman run -d \
     --name "${CONTAINER_NAME}" \
-    --hostname ollama-dev \
+    --hostname ollama-build \
     -v "${ABSOLUTE_SOURCE_PATH}:${MOUNT_PATH}:Z" \
     --device /dev/kfd:/dev/kfd \
     --device /dev/dri:/dev/dri \
@@ -80,45 +80,5 @@ podman run -d \
     -e LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH \
     --workdir "${MOUNT_PATH}" \
     "${BASE_IMAGE}" \
-    sleep infinity
 
 echo "✓ Container '${CONTAINER_NAME}' created and started"
-
-# Install additional dependencies in the container
-echo "Installing additional build dependencies..."
-podman exec "${CONTAINER_NAME}" dnf install -y \
-    git cmake gcc-c++ golang \
-    rocm-dev rocm-runtime hip-devel \
-    rocblas-devel hipblas-devel \
-    wget curl
-
-# Verify the setup
-echo "Verifying setup..."
-echo "Container status:"
-podman ps --filter name="${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-
-echo ""
-echo "Mounted source in container:"
-podman exec "${CONTAINER_NAME}" ls -la "${MOUNT_PATH}"
-
-echo ""
-echo "ROCm installation check:"
-podman exec "${CONTAINER_NAME}" rocminfo | head -10 || echo "ROCm info not available"
-
-echo ""
-echo "=== Setup Complete ==="
-echo "Container Name: ${CONTAINER_NAME}"
-echo "Source Mount: ${MOUNT_PATH}"
-echo "Local Source: ${ABSOLUTE_SOURCE_PATH}"
-echo ""
-echo "To enter the development environment:"
-echo "  podman exec -it ${CONTAINER_NAME} bash"
-echo ""
-echo "To build Ollama in the container:"
-echo "  podman exec -it ${CONTAINER_NAME} bash -c 'cd ${MOUNT_PATH} && make'"
-echo ""
-echo "To stop the container:"
-echo "  podman stop ${CONTAINER_NAME}"
-echo ""
-echo "To remove the container:"
-echo "  podman rm ${CONTAINER_NAME}"

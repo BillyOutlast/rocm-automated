@@ -21,8 +21,9 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
       make gcc cmake lld clang clang-devel compiler-rt libcurl-devel ninja-build \
       rocm-llvm rocm-device-libs hip-runtime-amd hip-devel rocm-dev rocm-libs \
       rocblas rocblas-devel hipblas hipblas-devel rocm-cmake libomp-devel libomp \
-      rocminfo radeontop \
+      rocminfo radeontop gcc-c++ golang rocm-runtime \
       git-core vim sudo rsync rocm-smi hsa-rocr ca-certificates \
+      git cmake gcc-c++ golang curl wget \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
