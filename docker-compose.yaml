@@ -4,8 +4,6 @@ services:
     container_name: open-webui
     environment:
       - HOSTNAME=open-webui
-      - OLLAMA_BASE_URL=http://127.0.0.1:11434
-      - COMFYUI_BASE_URL=http://127.0.0.1:8188
     ports:
       - "0.0.0.0:3000:8080"
     volumes:
