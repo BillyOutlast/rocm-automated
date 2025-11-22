@@ -40,7 +40,7 @@ ENV ROCM_PATH=/opt/rocm \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 # Copy built ollama binary and libraries
-COPY  /ollama/dist/lib/ollama /usr/lib/ollama
+COPY  /dist/lib/ollama /usr/lib/ollama
 
 # Set up library paths and environment
 ENV LD_LIBRARY_PATH=/opt/rocm/lib:/usr/lib/ollama:/usr/lib/ollama/rocm:$LD_LIBRARY_PATH 
