@@ -53,31 +53,12 @@ RUN rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
 RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
 ENV PATH=/usr/local/go/bin:$PATH
 
-# Download Go dependencies
-RUN go mod download
-
-# Set Go build flags and environment
-ARG GOFLAGS="'-ldflags=-w -s'"
-ENV CGO_ENABLED=1
-ARG CGO_CFLAGS
-ARG CGO_CXXFLAGS
-
-# Build Ollama binary and save to mounted output directory
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -buildmode=pie -o ${MOUNT_OUTPUT_PATH}/bin/ollama .
-
-# Copy built libraries to mounted output directory
-RUN cp -r dist/lib/ollama ${MOUNT_OUTPUT_PATH}/lib/
 
 # Copy from mounted output to standard system locations for runtime
 RUN cp ${MOUNT_OUTPUT_PATH}/bin/ollama /usr/bin/ollama \
     && cp -r ${MOUNT_OUTPUT_PATH}/lib/ollama /usr/lib/ollama \
     && chmod +x /usr/bin/ollama
 
-# Verify the build output in mounted directory
-RUN ls -la ${MOUNT_OUTPUT_PATH}/bin/ \
-    && ls -la ${MOUNT_OUTPUT_PATH}/lib/ \
-    && echo "Build output saved to mounted directories"
 
 # ROCm environment variables for runtime
 ENV ROCM_PATH=/opt/rocm \
