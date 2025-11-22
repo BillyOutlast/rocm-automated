@@ -33,7 +33,7 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     rocblas hipblas rocminfo \
     gcc gcc-c++ \
     ca-certificates \
-    bash \
+    bash wget \
 && dnf clean all && rm -rf /var/cache/dnf/*
 
 # rocm env

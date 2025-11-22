@@ -41,17 +41,7 @@ FROM docker.io/getterup/fedora-rocm7.1:latest AS runtime
 
 
 RUN dnf remove -y python3 python3.14
-RUN dnf install -y python3.13 gcc gcc-c++ wget
-RUN dnf -y --nodocs --setopt=install_weak_deps=False \
-    --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
-    install \
-      rocm-runtime rocm-device-libs hip-runtime-amd \
-      rocblas hipblas rocminfo \
-      python3.13 \
-      gcc gcc-c++ \
-      ca-certificates \
-      bash \
- && dnf clean all && rm -rf /var/cache/dnf/*
+RUN dnf install -y python3.13
 
 # Create video group and add proper permissions
 RUN groupadd -g 44 video || true
