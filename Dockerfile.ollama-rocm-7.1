@@ -48,11 +48,13 @@ gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
 REPO
 EOF
 
+# Install additional GPU access tools and configure permissions
 RUN dnf -y --nodocs --setopt=install_weak_deps=False \
     --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
     install \
       rocm-runtime rocm-device-libs hip-runtime-amd \
       rocblas hipblas rocminfo \
+      libdrm-devel mesa-libdrm \
       ca-certificates \
  && dnf clean all && rm -rf /var/cache/dnf/*
 
@@ -81,8 +83,9 @@ ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollam
     OLLAMA_KV_CACHE_TYPE="q8_0" \
     OLLAMA_LIBRARY_PATH=/usr/lib/ollama:/usr/lib/ollama/rocm_v7
 
-# Create render group and add proper permissions for GPU access
-RUN groupadd -g 109 render || true && \
+# Create video and render groups with proper permissions for GPU access
+RUN groupadd -g 44 video || true && \
+    groupadd -g 109 render || true && \
     mkdir -p /dev/dri && \
     chmod 666 /dev/null
  
