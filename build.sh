@@ -122,6 +122,10 @@ else
     exit 1
 fi
 
+echo ""
+echo -e "${BLUE}----------------------------------------${NC}"
+echo ""
+
 print_step "Building Stable-Diffusion variants for different GPU architectures..."
 echo -e "${YELLOW}Command: bash ./build-scripts/build-stable-diffusion-variants.sh${NC}"
 if bash ./build-scripts/build-stable-diffusion-variants.sh; then
