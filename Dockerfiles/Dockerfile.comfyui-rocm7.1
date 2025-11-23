@@ -11,6 +11,7 @@ COPY ComfyUI /app/ComfyUI
 
 # Copy the appropriate virtual environment based on GPU architecture
 # The venv should be created by running create-venv.sh on the host
+ARG GPU_ARCH="rocm7.1"
 COPY ${GPU_ARCH} /app/ComfyUI/venv
 
 # Set working directory to ComfyUI
