@@ -73,7 +73,7 @@ ENV PATH=/usr/local/go/bin:$PATH
 RUN go mod download
 
 # Build Ollama binary
-ARG GOFLAGS='-ldflags=-w -s'
+ARG GOFLAGS="'-ldflags=-w -s'"
 ENV CGO_ENABLED=1
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -trimpath -buildmode=pie -buildvcs=false -o /usr/bin/ollama .
