@@ -135,3 +135,6 @@ services:
     security_opt:
       - seccomp=unconfined
       - label=disable
+networks:
+  rocm-network:
+    driver: bridge
