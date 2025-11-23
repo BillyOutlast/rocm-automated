@@ -20,7 +20,9 @@ cd ComfyUI
 
 # Update ComfyUI repository
 echo "Updating ComfyUI repository..."
-git pull origin main
+git pull
+
+cd ..
 
 
 echo "Building ComfyUI with ROCm 7.1 (General)..."
@@ -34,7 +36,7 @@ python3 -m venv rocm7.1 && \
     else \
         pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
     fi && \
-    pip install -r requirements.txt && \
+    pip install -r ComfyUI/requirements.txt && \
     pip install opencv-python gguf
     deactivate
 
@@ -50,7 +52,7 @@ python3 -m venv gfx110X && \
     else \
         pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
     fi && \
-    pip install -r requirements.txt && \
+    pip install -r ComfyUI/requirements.txt && \
     pip install opencv-python gguf
     deactivate
 
@@ -66,7 +68,7 @@ python3 -m venv gfx1151 && \
     else \
         pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
     fi && \
-    pip install -r requirements.txt && \
+    pip install -r ComfyUI/requirements.txt && \
     pip install opencv-python gguf
     deactivate
 
@@ -82,7 +84,7 @@ python3 -m venv gfx120X && \
     else \
         pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
     fi && \
-    pip install -r requirements.txt && \
+    pip install -r ComfyUI/requirements.txt && \
     pip install opencv-python gguf
     deactivate
 
