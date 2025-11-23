@@ -104,8 +104,6 @@ else
     exit 1
 fi
 
-cd ..
-
 echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
@@ -118,6 +116,8 @@ else
     print_error "Failed to build ComfyUI variants"
     exit 1
 fi
+
+cd ..
 
 print_step "Building Stable-Diffusion variants for different GPU architectures..."
 echo -e "${YELLOW}Command: bash ./build-scripts/build-stable-diffusion-variants.sh${NC}"
