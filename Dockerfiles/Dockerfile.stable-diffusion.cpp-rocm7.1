@@ -45,19 +45,10 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 100
 # Create video group and add proper permissions
 RUN groupadd -g 44 video || true
 
-# ROCm environment variables
-ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm \
-    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    HSA_PATH=/opt/rocm \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
-
 # Copy the complete sd-webui with the binary and installed dependencies
 COPY --from=builder /sd-webui /sd-webui
 
 # Set up library paths and working directory
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH
 WORKDIR /sd-webui
 
 # Create directories for models and outputs
