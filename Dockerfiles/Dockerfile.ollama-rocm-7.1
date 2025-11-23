@@ -142,7 +142,7 @@ ENV ROCM_PATH=/opt/rocm \
     PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 # Set library paths
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollama/rocm:/usr/lib/ollama/rocm_v7:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollama/rocm:/usr/lib/ollama/rocm_v7
 
 # Expose Ollama port
 ENV OLLAMA_HOST=0.0.0.0:11434
