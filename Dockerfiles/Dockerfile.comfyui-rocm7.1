@@ -8,12 +8,6 @@ RUN apt-get update \
 # Copy ComfyUI repository and pre-built virtual environment
 WORKDIR /app
 
-# Set environment to use the virtual environment and add ROCm runtime settings
-ENV PATH="/app/ComfyUI/venv/bin:$PATH" \
-    VIRTUAL_ENV="/app/ComfyUI/venv" \
-    PYTORCH_ROCM_ARCH="${GPU_ARCH}" \
-    HSA_OVERRIDE_GFX_VERSION="${GPU_ARCH}" 
-
 # Expose default ComfyUI port
 EXPOSE 8188
 

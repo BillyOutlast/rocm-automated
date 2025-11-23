@@ -15,20 +15,35 @@ fi
 
 cd /app
 
-echo "=== ComfyUI Multi-Architecture Build Script ==="
-echo "Creating optimized builds for different AMD GPU architectures..."
-
-# Clone ComfyUI if it doesn't exist
-if [ ! -d "ComfyUI" ]; then
-    echo "Cloning ComfyUI repository..."
-    git clone https://github.com/comfyanonymous/ComfyUI.git
-else
-    echo "ComfyUI directory already exists, skipping clone..."
-fi
-cd ComfyUI
 
 # Update ComfyUI repository
 echo "Updating ComfyUI repository..."
+if command -v git &> /dev/null; then
+    echo "Git found!"
+else
+    echo "Git not found, attempting to install..."
+    if command -v apt-get &> /dev/null; then
+        apt-get update && apt-get install -y git
+    else
+        echo "Warning: Git not available and cannot install. Skipping repository update."
+    fi
+fi
+
+echo "=== ComfyUI Multi-Architecture Build Script ==="
+echo "Creating optimized builds for different AMD GPU architectures..."
+# Clone ComfyUI if it doesn't exist or if it's not a valid git repository
+if [ ! -d "ComfyUI" ]; then
+    echo "ComfyUI directory doesn't exist, cloning repository..."
+    git clone https://github.com/comfyanonymous/ComfyUI.git
+elif [ ! -d "ComfyUI/.git" ]; then
+    echo "ComfyUI directory exists but is not a valid git repository, clearing contents..."
+    rm -rf ComfyUI/*
+    rm -rf ComfyUI/.*[!.]*
+    git clone https://github.com/comfyanonymous/ComfyUI.git
+else
+    echo "ComfyUI directory already exists and is a valid git repository, skipping clone..."
+fi
+cd ComfyUI
 git pull
 
 
