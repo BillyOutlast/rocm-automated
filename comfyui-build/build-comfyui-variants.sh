@@ -38,16 +38,16 @@ echo "Pushing images to registry..."
 
 # Push all images to registry
 echo "Pushing ${REGISTRY}/comfyui:rocm7.1..."
-docker push ${REGISTRY}/comfyui:rocm7.1
+podman push ${REGISTRY}/comfyui:rocm7.1
 
 echo "Pushing ${REGISTRY}/comfyui:rdna3-gfx110x..."
-docker push ${REGISTRY}/comfyui:rdna3-gfx110x
+podman push ${REGISTRY}/comfyui:rdna3-gfx110x
 
 echo "Pushing ${REGISTRY}/comfyui:rdna3.5-gfx1151..."
-docker push ${REGISTRY}/comfyui:rdna3.5-gfx1151
+podman push ${REGISTRY}/comfyui:rdna3.5-gfx1151
 
 echo "Pushing ${REGISTRY}/comfyui:rdna4-gfx120x..."
-docker push ${REGISTRY}/comfyui:rdna4-gfx120x
+podman push ${REGISTRY}/comfyui:rdna4-gfx120x
 
 echo ""
 echo "All images pushed to registry!"
