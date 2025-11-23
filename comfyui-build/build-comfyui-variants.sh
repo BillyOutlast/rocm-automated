@@ -24,28 +24,24 @@ echo "Building ComfyUI docker images for different AMD GPU architectures..."
 # ROCm 7.1 (General compatibility)
 echo "Building ComfyUI with ROCm 7.1 (General)..."
 docker build -t ${REGISTRY}/comfyui:rocm7.1 \
-  --build-arg PYTORCH_INDEX_URL="https://download.pytorch.org/whl/nightly/rocm7.1" \
   --build-arg GPU_ARCH="rocm7.1" \
   -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
 
 # RDNA 3 (RX 7000 series)
 echo "Building ComfyUI for RDNA 3 (RX 7000 series)..."
 docker build -t ${REGISTRY}/comfyui:rdna3-gfx110x \
-  --build-arg PYTORCH_INDEX_URL="https://rocm.nightlies.amd.com/v2/gfx110X-dgpu/" \
   --build-arg GPU_ARCH="gfx110X" \
   -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
 
 # RDNA 3.5 (Strix halo/Ryzen AI Max+ 365)
 echo "Building ComfyUI for RDNA 3.5 (Strix halo/Ryzen AI Max+ 365)..."
 docker build -t ${REGISTRY}/comfyui:rdna3.5-gfx1151 \
-  --build-arg PYTORCH_INDEX_URL="https://rocm.nightlies.amd.com/v2/gfx1151/" \
   --build-arg GPU_ARCH="gfx1151" \
   -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
 
 # RDNA 4 (RX 9000 series)
 echo "Building ComfyUI for RDNA 4 (RX 9000 series)..."
 docker build -t ${REGISTRY}/comfyui:rdna4-gfx120x \
-  --build-arg PYTORCH_INDEX_URL="https://rocm.nightlies.amd.com/v2/gfx120X-all/" \
   --build-arg GPU_ARCH="gfx120X" \
   -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
 
