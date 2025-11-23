@@ -33,6 +33,10 @@ fi
 echo "=== ComfyUI Multi-Architecture Build Script ==="
 echo "Creating optimized builds for different AMD GPU architectures..."
 
+# Configure git to handle ownership issues in Docker containers
+git config --global --add safe.directory /app/ComfyUI
+git config --global init.defaultBranch main
+
 # Clone ComfyUI if it doesn't exist or if it's not a valid git repository
 if [ ! -d "ComfyUI" ]; then
     echo "ComfyUI directory doesn't exist, cloning repository..."
@@ -52,13 +56,15 @@ elif [ ! -d "ComfyUI/.git" ]; then
 else
     echo "ComfyUI directory already exists and is a valid git repository..."
     cd ComfyUI
+    # Fix git ownership issues for existing repository
+    git config --add safe.directory /app/ComfyUI
     echo "Pulling latest updates..."
     git pull || echo "Git pull failed, continuing with existing code..."
     cd ..
 fi
 
-
 # Set PyTorch index URL based on GPU_ARCH if specified
+echo "Configuring PyTorch index URL based on GPU_ARCH: $GPU_ARCH..."
 if [ "$GPU_ARCH" = "rocm7.1" ]; then
     echo "Building ComfyUI with ROCm 7.1 (General)..."
     PYTORCH_INDEX_URL="https://download.pytorch.org/whl/nightly/rocm7.1"
@@ -87,6 +93,13 @@ echo "Activating virtual environment..."
 echo "Upgrading pip..."
 pip install --upgrade pip
 echo "Installing PyTorch with ROCm support..."
+# Check if PYTORCH_INDEX_URL is set, if not, use default
+if [ -z "${PYTORCH_INDEX_URL}" ]; then
+    echo "Warning: No specific GPU architecture detected, using default ROCm 7.1..."
+    PYTORCH_INDEX_URL="https://download.pytorch.org/whl/nightly/rocm7.1"
+fi
+
+echo "Using PyTorch index URL: ${PYTORCH_INDEX_URL}"
 if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
     pip install --pre torch torchvision torchaudio --extra-index-url ${PYTORCH_INDEX_URL}
 else
