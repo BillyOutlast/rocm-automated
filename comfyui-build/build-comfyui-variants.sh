@@ -3,47 +3,34 @@
 # Build script for ComfyUI with different AMD GPU architecture support
 
 REGISTRY="docker.io/getterup"
-Dockerfiles_DIR="./Dockerfiles"
+Dockerfiles_DIR="../Dockerfiles"
 
-echo "Building ComfyUI docker images for different AMD GPU architectures..."
-
-# First, create the virtual environments using create-venv.sh
-echo "Creating virtual environments for different GPU architectures..."
-if [ -f "./comfyui-build/create-venv.sh" ]; then
-    cd comfyui-build
-    chmod +x create-venv.sh
-    ./create-venv.sh
-    cd ..
-else
-    echo "Error: create-venv.sh not found in ./comfyui-build/"
-    exit 1
-fi
 
 echo "Building ComfyUI docker images for different AMD GPU architectures..."
 
 # ROCm 7.1 (General compatibility)
 echo "Building ComfyUI with ROCm 7.1 (General)..."
-docker build -t ${REGISTRY}/comfyui:rocm7.1 \
+podman build -t ${REGISTRY}/comfyui:rocm7.1 \
   --build-arg GPU_ARCH="rocm7.1" \
-  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
+  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 .
 
 # RDNA 3 (RX 7000 series)
 echo "Building ComfyUI for RDNA 3 (RX 7000 series)..."
-docker build -t ${REGISTRY}/comfyui:rdna3-gfx110x \
+podman build -t ${REGISTRY}/comfyui:rdna3-gfx110x \
   --build-arg GPU_ARCH="gfx110X" \
-  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
+  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 .
 
 # RDNA 3.5 (Strix halo/Ryzen AI Max+ 365)
 echo "Building ComfyUI for RDNA 3.5 (Strix halo/Ryzen AI Max+ 365)..."
-docker build -t ${REGISTRY}/comfyui:rdna3.5-gfx1151 \
+podman build -t ${REGISTRY}/comfyui:rdna3.5-gfx1151 \
   --build-arg GPU_ARCH="gfx1151" \
-  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
+  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 .
 
 # RDNA 4 (RX 9000 series)
 echo "Building ComfyUI for RDNA 4 (RX 9000 series)..."
-docker build -t ${REGISTRY}/comfyui:rdna4-gfx120x \
+podman build -t ${REGISTRY}/comfyui:rdna4-gfx120x \
   --build-arg GPU_ARCH="gfx120X" \
-  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 ./comfyui-build
+  -f ${Dockerfiles_DIR}/Dockerfile.comfyui-rocm7.1 .
 
 echo "All ComfyUI builds completed!"
 echo ""
