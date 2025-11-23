@@ -64,7 +64,7 @@ RUN --mount=type=cache,target=/root/.ccache \
         -DCMAKE_CXX_COMPILER=clang++ \
         -DSD_HIPBLAS=ON \
         -DGGML_VULKAN=OFF \
-        -DAMDGPU_TARGETS="gfx1100,gfx1151" \
+        -DAMDGPU_TARGETS="gfx908,gfx90a,gfx940,gfx941,gfx942,gfx1030,gfx1100,gfx1101,gfx1102,gfx1150,gfx1151" \
         -DROCM_PATH=/opt/rocm \
         -DHIP_PATH=/opt/rocm \
         && cmake --build --parallel ${PARALLEL} --preset 'ROCm 7' \
@@ -128,7 +128,12 @@ ENV ROCM_PATH=/opt/rocm \
     HIP_CLANG_PATH=/opt/rocm/llvm/bin \
     HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
     HSA_ENABLE_SDMA=0 \
-    HSA_OVERRIDE_GFX_VERSION=11.0.0 \
+    HSA_OVERRIDE_GFX_VERSION_0=10.3.0 \
+    HSA_OVERRIDE_GFX_VERSION_1=11.0.0 \
+    HSA_OVERRIDE_GFX_VERSION_2=11.0.1 \
+    HSA_OVERRIDE_GFX_VERSION_3=11.0.2 \
+    HSA_OVERRIDE_GFX_VERSION_4=11.5.0 \
+    HSA_OVERRIDE_GFX_VERSION_5=11.5.1 \
     GPU_MAX_ALLOC_PERCENT=100 \
     GPU_MAX_HEAP_SIZE=100 \
     OLLAMA_FLASH_ATTENTION=true \
