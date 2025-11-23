@@ -49,6 +49,8 @@ echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
+cd ollama-build
+
 print_step "Checking/cloning Ollama ROCm repository..."
 if [ ! -d "ollama-linux-amd-apu" ]; then
     echo -e "${YELLOW}Command: git clone https://github.com/phueper/ollama-linux-amd-apu.git ollama-linux-amd-apu${NC}"
