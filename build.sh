@@ -92,7 +92,6 @@ else
     exit 1
 fi
 
-cd ..
 
 echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
@@ -102,9 +101,8 @@ print_step "Building ComfyUI ROCm 7.1 image..."
 echo -e "${YELLOW}Command: podman build -t ${COMFYUI_IMAGE}:latest -f Dockerfiles/Dockerfile.comfyui-rocm7.1 .${NC}"
 if podman build -t "${COMFYUI_IMAGE}:latest" -f Dockerfiles/Dockerfile.comfyui-rocm7.1 .; then
     print_success "ComfyUI ROCm 7.1 image built successfully"
-    cd ..
 else
-    print_error "Failed to build Ollama ROCm 7.1 image"
+    print_error "Failed to build ComfyUI ROCm 7.1 image"
     exit 1
 fi
 

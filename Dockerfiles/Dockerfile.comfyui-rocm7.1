@@ -17,7 +17,7 @@ ENV PATH="/app/ComfyUI/venv/bin:$PATH" \
 # Expose default ComfyUI port
 EXPOSE 8188
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY comfyui-build/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 
 # Set the default command to run ComfyUI with ROCm optimizations
