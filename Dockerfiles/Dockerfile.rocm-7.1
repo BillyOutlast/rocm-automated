@@ -62,25 +62,5 @@ RUN dnf -y --nodocs --setopt=install_weak_deps=False \
 RUN dnf -y install glslang python-devel @development-tools
 
 
-# Set ROCm base paths
-ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm
-
-# Set ROCm toolchain paths
-ENV HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode
-
-# Update PATH with ROCm binaries
-ENV PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
-
-
-# Create ROCm environment profile
-#RUN printf '%s\n' \
-#  'export ROCBLAS_USE_HIPBLASLT=1' \
-#  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh
-
-# Configure bash to load ROCm profile
-RUN echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
-
 # shell
 CMD ["/bin/bash"]
