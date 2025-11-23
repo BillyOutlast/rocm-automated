@@ -4,11 +4,12 @@ services:
     container_name: open-webui
     environment:
       - HOSTNAME=open-webui
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://172.28.0.3:11434
     ports:
       - "3000:8080"
     networks:
-      - rocm-network
+      rocm-network:
+        ipv4_address: 172.28.0.2
     volumes:
       - ./open-webui:/app/backend/data
       - /etc/resolv.conf:/etc/resolv.conf:ro
@@ -26,7 +27,8 @@ services:
     ports:
       - "11434:11434"
     networks:
-      - rocm-network
+      rocm-network:
+        ipv4_address: 172.28.0.3
     volumes:
       - ./ollama:/root/.ollama:Z
       - /etc/resolv.conf:/etc/resolv.conf:ro
@@ -61,7 +63,8 @@ services:
     ports:
       - "7860:7860"
     networks:
-      - rocm-network
+        rocm-network:
+          ipv4_address: 172.28.0.4
     volumes:
       - ./sd.cpp-webui/outputs/any2video:/sd-webui/outputs/any2video:Z
       - ./sd.cpp-webui/outputs/img2img:/sd-webui/outputs/img2img:Z
@@ -96,7 +99,8 @@ services:
     ports:
       - "8188:8188"
     networks:
-      - rocm-network
+      rocm-network:
+        ipv4_address: 172.28.0.5
     volumes:
       - ./ComfyUI/models/audio_encoders:/app/ComfyUI/models/audio_encoders
       - ./ComfyUI/models/checkpoints:/app/ComfyUI/models/checkpoints
@@ -138,3 +142,7 @@ services:
 networks:
   rocm-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+          gateway: 172.28.0.1
