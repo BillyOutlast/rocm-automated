@@ -54,6 +54,16 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+# Ensure BuildKit is enabled and create buildx builder if needed
+export DOCKER_BUILDKIT=1
+if ! docker buildx ls | grep -q "rocm-builder"; then
+    print_step "Creating Docker buildx builder..."
+    docker buildx create --name rocm-builder --use --driver docker-container
+else
+    print_step "Using existing buildx builder..."
+    docker buildx use rocm-builder
+fi
+
 print_step "Building stable-diffusion.cpp docker images for different AMD GPU architectures..."
 echo ""
 
@@ -63,11 +73,13 @@ for gfx_name in "${!GFX_ARCHITECTURES[@]}"; do
     image_tag="${REGISTRY}/${BASE_IMAGE_NAME}:${gfx_name}"
     
     print_step "Building for ${gfx_name} - ${architecture_desc}..."
-    echo -e "${YELLOW}Command: docker build -t ${image_tag} --build-arg GFX_NAME=${gfx_name} -f ${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1 .${NC}"
+    echo -e "${YELLOW}Command: docker buildx build -t ${image_tag} --build-arg GFX_NAME=${gfx_name} -f ${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1 --load .${NC}"
     
-    if docker build -t "${image_tag}" \
+    if docker buildx build -t "${image_tag}" \
         --build-arg GFX_NAME="${gfx_name}" \
-        -f "${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1" .; then
+        -f "${Dockerfiles_DIR}/Dockerfile.stable-diffusion.cpp-rocm7.1" \
+        --load \
+        .; then
         print_success "Built ${image_tag} successfully"
     else
         print_error "Failed to build ${image_tag}"
