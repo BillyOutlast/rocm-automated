@@ -94,11 +94,7 @@ docker run -d \
     --security-opt label=disable \
     --cap-add SYS_PTRACE \
     --ipc host \
-    -e ROCM_PATH=/opt/rocm \
-    -e HIP_PATH=/opt/rocm \
-    -e HSA_PATH=/opt/rocm/hsa \
-    -e PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:/usr/local/go/bin:$PATH \
-    -e LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH \
+    -e PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH \
     -e PARALLEL=${PARALLEL} \
     -e CMAKEVERSION=${CMAKEVERSION} \
     -e LDFLAGS=-s \
