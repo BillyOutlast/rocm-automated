@@ -110,4 +110,4 @@ echo "Installing ComfyUI requirements..."
 pip install -r requirements.txt
 
 echo "Starting ComfyUI..."
-python main.py --listen 0.0.0.0 --port 8188 --force-fp16
+python main.py --listen 0.0.0.0 --port 8188 --use-pytorch-cross-attention

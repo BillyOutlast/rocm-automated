@@ -100,6 +100,8 @@ services:
       - ROCR_VISIBLE_DEVICES=1
       - COMFYUI_ENABLE_ROCM=True
       - GPU_ARCH=rocm7.1
+      - PYTORCH_TUNABLEOP_ENABLED=1
+      - MIOPEN_FIND_MODE=FAST
     ports:
       - "8188:8188"
     networks:
