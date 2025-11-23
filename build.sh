@@ -74,6 +74,10 @@ echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
+git clone https://github.com/phueper/ollama-linux-amd-apu.git ollama-linux-amd-apu
+cd ollama-linux-amd-apu
+docker build -t ${OLLAMA_IMAGE}:latest --build-arg FLAVOR=rocm .
+
 print_step "Building Ollama ROCm 7.1 image..."
 echo -e "${YELLOW}Command: docker build -t ${OLLAMA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1 .${NC}"
 if docker build -t "${OLLAMA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1" .; then
