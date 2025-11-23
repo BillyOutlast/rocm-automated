@@ -99,7 +99,7 @@ services:
     environment:
       - ROCR_VISIBLE_DEVICES=1
       - COMFYUI_ENABLE_ROCM=True
-      - GPU_ARCH=gfx1151
+      - GPU_ARCH=gfx110X
       - PYTORCH_TUNABLEOP_ENABLED=0
       - MIOPEN_FIND_MODE=NORMAL
       - AMD_SERIALIZE_KERNEL=1
