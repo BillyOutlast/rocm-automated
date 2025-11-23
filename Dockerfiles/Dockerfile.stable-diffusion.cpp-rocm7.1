@@ -3,6 +3,11 @@ FROM rocm/dev-ubuntu-24.04:7.1-complete AS builder
 
 ARG GFX_NAME=gfx1151
 
+RUN apt-get update \
+    && apt-get install -y ca-certificates libvulkan1 \
+    && apt-get clean git \
+    && rm -rf /var/lib/apt/lists/*
+
 # Clone and build stable-diffusion.cpp
 RUN git clone https://github.com/leejet/stable-diffusion.cpp /stable-diffusion.cpp
 WORKDIR /stable-diffusion.cpp
