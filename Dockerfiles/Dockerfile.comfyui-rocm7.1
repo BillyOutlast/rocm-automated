@@ -2,7 +2,7 @@
 FROM rocm/dev-ubuntu-24.04:7.1-complete AS default
 RUN apt-get update \
     && apt-get install -y ca-certificates libvulkan1 \
-    && apt-get clean \
+    && apt-get clean git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy ComfyUI repository and pre-built virtual environment
