@@ -3,8 +3,6 @@ FROM rocm/dev-ubuntu-24.04:7.1-complete AS builder
 
 ARG GFX_NAME=gfx1151
 
-ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
-
 # Clone and build stable-diffusion.cpp
 RUN git clone https://github.com/leejet/stable-diffusion.cpp /stable-diffusion.cpp
 WORKDIR /stable-diffusion.cpp
