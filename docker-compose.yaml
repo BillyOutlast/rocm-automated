@@ -103,8 +103,6 @@ services:
       - PYTORCH_TUNABLEOP_ENABLED=0
       - MIOPEN_FIND_MODE=NORMAL
       - AMD_SERIALIZE_KERNEL=1
-      - HIP_VISIBLE_DEVICES=1
-      - HSA_OVERRIDE_GFX_VERSION=11.0.0
       - MIOPEN_USER_DB_PATH=/tmp/.miopen
       - MIOPEN_CUSTOM_CACHE_DIR=/tmp/.miopen
     ports:
