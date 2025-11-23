@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # ComfyUI Virtual Environment Creation Script for AMD GPUs
+
 # This script clones ComfyUI and creates 4 different virtual environments
 # optimized for different AMD GPU architectures
 
