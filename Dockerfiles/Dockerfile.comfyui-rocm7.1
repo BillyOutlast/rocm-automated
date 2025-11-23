@@ -25,24 +25,16 @@ ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH \
     HSA_OVERRIDE_GFX_VERSION="${GPU_ARCH}" \
     TORCH_USE_HIP_DSA=1
 
-# Clone ComfyUI repository
+# Copy ComfyUI repository and pre-built virtual environment
 WORKDIR /app
-RUN git clone https://github.com/comfyanonymous/ComfyUI
+COPY ComfyUI /app/ComfyUI
+
+# Copy the appropriate virtual environment based on GPU architecture
+# The venv should be created by running create-venv.sh on the host
+COPY ${GPU_ARCH} /app/ComfyUI/venv
 
 # Set working directory to ComfyUI
 WORKDIR /app/ComfyUI
-
-# Create and activate virtual environment, then install dependencies
-RUN python3 -m venv venv && \
-    . venv/bin/activate && \
-    pip install --upgrade pip && \
-    if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then \
-        pip install --pre torch torchvision torchaudio --extra-index-url ${PYTORCH_INDEX_URL}; \
-    else \
-        pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
-    fi && \
-    pip install -r requirements.txt && \
-    pip install opencv-python gguf
 
 # Set environment to use the virtual environment and add ROCm runtime settings
 ENV PATH="/app/ComfyUI/venv/bin:$PATH" \

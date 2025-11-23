@@ -114,13 +114,30 @@ else
     exit 1
 fi
 
+cd ..
+
+echo ""
+echo -e "${BLUE}----------------------------------------${NC}"
+echo ""
+
+cd comfyui-build
+
+print_step "Creating/updating virtual environment..."
+echo -e "${YELLOW}Command: bash ./create-venv.sh${NC}"
+if bash ./create-venv.sh; then
+    print_success "Virtual environment created/updated successfully"
+else
+    print_error "Failed to create/update virtual environment"
+    exit 1
+fi
+
 echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
 print_step "Building ComfyUI variants for different GPU architectures..."
-echo -e "${YELLOW}Command: bash ./comfyui-build/build-comfyui-variants.sh${NC}"
-if bash ./comfyui-build/build-comfyui-variants.sh; then
+echo -e "${YELLOW}Command: bash ./build-comfyui-variants.sh${NC}"
+if bash ./build-comfyui-variants.sh; then
     print_success "ComfyUI variants built successfully"
 else
     print_error "Failed to build ComfyUI variants"
