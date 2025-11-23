@@ -75,9 +75,9 @@ ENV PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 
 # Create ROCm environment profile
-RUN printf '%s\n' \
-  'export ROCBLAS_USE_HIPBLASLT=1' \
-  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh
+#RUN printf '%s\n' \
+#  'export ROCBLAS_USE_HIPBLASLT=1' \
+#  > /etc/profile.d/rocm.sh && chmod +x /etc/profile.d/rocm.sh
 
 # Configure bash to load ROCm profile
 RUN echo 'source /etc/profile.d/rocm.sh' >> /etc/bashrc
