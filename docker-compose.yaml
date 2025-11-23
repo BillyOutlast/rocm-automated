@@ -106,31 +106,7 @@ services:
       rocm-network:
         ipv4_address: 172.28.0.5
     volumes:
-      - ./User-Directories/ComfyUI/venv/audio_encoders:/app/ComfyUI/venv
-      - ./User-Directories/ComfyUI/models/audio_encoders:/app/ComfyUI/models/audio_encoders
-      - ./User-Directories/ComfyUI/models/checkpoints:/app/ComfyUI/models/checkpoints
-      - ./User-Directories/ComfyUI/models/clip:/app/ComfyUI/models/clip
-      - ./User-Directories/ComfyUI/models/clip_vision:/app/ComfyUI/models/clip_vision
-      - ./User-Directories/ComfyUI/models/controlnet:/app/ComfyUI/models/controlnet
-      - ./User-Directories/ComfyUI/models/diffusers:/app/ComfyUI/models/diffusers
-      - ./User-Directories/ComfyUI/models/diffusion_models:/app/ComfyUI/models/diffusion_models
-      - ./User-Directories/ComfyUI/models/embeddings:/app/ComfyUI/models/embeddings
-      - ./User-Directories/ComfyUI/models/gligen:/app/ComfyUI/models/gligen
-      - ./User-Directories/ComfyUI/models/hypernetworks:/app/ComfyUI/models/hypernetworks
-      - ./User-Directories/ComfyUI/models/latent_upscale_models:/app/ComfyUI/models/latent_upscale_models
-      - ./User-Directories/ComfyUI/models/loras:/app/ComfyUI/models/loras
-      - ./User-Directories/ComfyUI/models/model_patches:/app/ComfyUI/models/model_patches
-      - ./User-Directories/ComfyUI/models/photomaker:/app/ComfyUI/models/photomaker
-      - ./User-Directories/ComfyUI/models/style_models:/app/ComfyUI/models/style_models
-      - ./User-Directories/ComfyUI/models/text_encoders:/app/ComfyUI/models/text_encoders
-      - ./User-Directories/ComfyUI/models/unet:/app/ComfyUI/models/unet
-      - ./User-Directories/ComfyUI/models/upscale_models:/app/ComfyUI/models/upscale_models
-      - ./User-Directories/ComfyUI/models/vae:/app/ComfyUI/models/vae
-      - ./User-Directories/ComfyUI/models/vae_approx:/app/ComfyUI/models/vae_approx
-      - ./User-Directories/ComfyUI/output:/app/ComfyUI/output
-      - ./User-Directories/ComfyUI/custom_nodes:/app/ComfyUI/custom_nodes
-      - ./User-Directories/ComfyUI/input:/app/ComfyUI/input
-      - ./User-Directories/ComfyUI/temp:/app/ComfyUI/temp
+      - ./User-Directories/ComfyUI/:/app/ComfyUI:Z
       - /etc/resolv.conf:/etc/resolv.conf:ro
     devices:
       - /dev/kfd:/dev/kfd

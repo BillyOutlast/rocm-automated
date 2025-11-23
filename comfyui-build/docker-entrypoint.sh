@@ -38,14 +38,22 @@ if [ ! -d "ComfyUI" ]; then
     echo "ComfyUI directory doesn't exist, cloning repository..."
     git clone https://github.com/comfyanonymous/ComfyUI.git
 elif [ ! -d "ComfyUI/.git" ]; then
-    echo "ComfyUI directory exists but is not a valid git repository, clearing and re-cloning..."
-    rm -rf ComfyUI
-    git clone https://github.com/comfyanonymous/ComfyUI.git
+    echo "ComfyUI directory exists but is not a valid git repository..."
+    echo "Attempting to initialize git repository in existing directory..."
+    cd ComfyUI
+    # Initialize as git repository and add remote
+    git init
+    git remote add origin https://github.com/comfyanonymous/ComfyUI.git
+    echo "Fetching latest ComfyUI code..."
+    git fetch origin
+    git checkout -f main || git checkout -f master
+    git reset --hard origin/main || git reset --hard origin/master
+    cd ..
 else
     echo "ComfyUI directory already exists and is a valid git repository..."
     cd ComfyUI
     echo "Pulling latest updates..."
-    git pull
+    git pull || echo "Git pull failed, continuing with existing code..."
     cd ..
 fi
 
