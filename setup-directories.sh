@@ -4,6 +4,10 @@
 
 set -e
 
+mkdir -p ./User-Directories
+
+cd ./User-Directories
+
 mkdir -p ./open-webui
 
 mkdir -p ./ollama

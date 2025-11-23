@@ -11,7 +11,7 @@ services:
       rocm-network:
         ipv4_address: 172.28.0.2
     volumes:
-      - ./open-webui:/app/backend/data
+      - ./User-Directories/open-webui:/app/backend/data
       - /etc/resolv.conf:/etc/resolv.conf:ro
     restart: always
     devices:
@@ -30,7 +30,7 @@ services:
       rocm-network:
         ipv4_address: 172.28.0.3
     volumes:
-      - ./ollama:/root/.ollama:Z
+      - ./User-Directories/ollama:/root/.ollama:Z
       - /etc/resolv.conf:/etc/resolv.conf:ro
     devices:
       - /dev/kfd:/dev/kfd
@@ -66,21 +66,21 @@ services:
         rocm-network:
           ipv4_address: 172.28.0.4
     volumes:
-      - ./sd.cpp-webui/outputs/any2video:/sd-webui/outputs/any2video:Z
-      - ./sd.cpp-webui/outputs/img2img:/sd-webui/outputs/img2img:Z
-      - ./sd.cpp-webui/outputs/imgedit:/sd-webui/outputs/imgedit:Z
-      - ./sd.cpp-webui/outputs/txt2img:/sd-webui/outputs/txt2img:Z
-      - ./sd.cpp-webui/outputs/upscale:/sd-webui/outputs/upscale:Z
-      - ./sd.cpp-webui/models/checkpoints:/sd-webui/models/checkpoints:Z
-      - ./sd.cpp-webui/models/clip:/sd-webui/models/clip:Z
-      - ./sd.cpp-webui/models/controlnet:/sd-webui/models/controlnet:Z
-      - ./sd.cpp-webui/models/embeddings:/sd-webui/models/embeddings:Z
-      - ./sd.cpp-webui/models/loras:/sd-webui/models/loras:Z
-      - ./sd.cpp-webui/models/photomaker:/sd-webui/models/photomaker:Z
-      - ./sd.cpp-webui/models/taesd:/sd-webui/models/taesd:Z
-      - ./sd.cpp-webui/models/unet:/sd-webui/models/unet:Z
-      - ./sd.cpp-webui/models/upscale_models:/sd-webui/models/upscale_models:Z
-      - ./sd.cpp-webui/models/vae:/sd-webui/models/vae:Z
+      - ./User-Directories/sd.cpp-webui/outputs/any2video:/sd-webui/outputs/any2video:Z
+      - ./User-Directories/sd.cpp-webui/outputs/img2img:/sd-webui/outputs/img2img:Z
+      - ./User-Directories/sd.cpp-webui/outputs/imgedit:/sd-webui/outputs/imgedit:Z
+      - ./User-Directories/sd.cpp-webui/outputs/txt2img:/sd-webui/outputs/txt2img:Z
+      - ./User-Directories/sd.cpp-webui/outputs/upscale:/sd-webui/outputs/upscale:Z
+      - ./User-Directories/sd.cpp-webui/models/checkpoints:/sd-webui/models/checkpoints:Z
+      - ./User-Directories/sd.cpp-webui/models/clip:/sd-webui/models/clip:Z
+      - ./User-Directories/sd.cpp-webui/models/controlnet:/sd-webui/models/controlnet:Z
+      - ./User-Directories/sd.cpp-webui/models/embeddings:/sd-webui/models/embeddings:Z
+      - ./User-Directories/sd.cpp-webui/models/loras:/sd-webui/models/loras:Z
+      - ./User-Directories/sd.cpp-webui/models/photomaker:/sd-webui/models/photomaker:Z
+      - ./User-Directories/sd.cpp-webui/models/taesd:/sd-webui/models/taesd:Z
+      - ./User-Directories/sd.cpp-webui/models/unet:/sd-webui/models/unet:Z
+      - ./User-Directories/sd.cpp-webui/models/upscale_models:/sd-webui/models/upscale_models:Z
+      - ./User-Directories/sd.cpp-webui/models/vae:/sd-webui/models/vae:Z
       - /etc/resolv.conf:/etc/resolv.conf:ro
     devices:
       - /dev/kfd:/dev/kfd
@@ -102,30 +102,30 @@ services:
       rocm-network:
         ipv4_address: 172.28.0.5
     volumes:
-      - ./ComfyUI/models/audio_encoders:/app/ComfyUI/models/audio_encoders
-      - ./ComfyUI/models/checkpoints:/app/ComfyUI/models/checkpoints
-      - ./ComfyUI/models/clip:/app/ComfyUI/models/clip
-      - ./ComfyUI/models/clip_vision:/app/ComfyUI/models/clip_vision
-      - ./ComfyUI/models/controlnet:/app/ComfyUI/models/controlnet
-      - ./ComfyUI/models/diffusers:/app/ComfyUI/models/diffusers
-      - ./ComfyUI/models/diffusion_models:/app/ComfyUI/models/diffusion_models
-      - ./ComfyUI/models/embeddings:/app/ComfyUI/models/embeddings
-      - ./ComfyUI/models/gligen:/app/ComfyUI/models/gligen
-      - ./ComfyUI/models/hypernetworks:/app/ComfyUI/models/hypernetworks
-      - ./ComfyUI/models/latent_upscale_models:/app/ComfyUI/models/latent_upscale_models
-      - ./ComfyUI/models/loras:/app/ComfyUI/models/loras
-      - ./ComfyUI/models/model_patches:/app/ComfyUI/models/model_patches
-      - ./ComfyUI/models/photomaker:/app/ComfyUI/models/photomaker
-      - ./ComfyUI/models/style_models:/app/ComfyUI/models/style_models
-      - ./ComfyUI/models/text_encoders:/app/ComfyUI/models/text_encoders
-      - ./ComfyUI/models/unet:/app/ComfyUI/models/unet
-      - ./ComfyUI/models/upscale_models:/app/ComfyUI/models/upscale_models
-      - ./ComfyUI/models/vae:/app/ComfyUI/models/vae
-      - ./ComfyUI/models/vae_approx:/app/ComfyUI/models/vae_approx
-      - ./ComfyUI/output:/app/ComfyUI/output
-      - ./ComfyUI/custom_nodes:/app/ComfyUI/custom_nodes
-      - ./ComfyUI/input:/app/ComfyUI/input
-      - ./ComfyUI/temp:/app/ComfyUI/temp
+      - ./User-Directories/ComfyUI/models/audio_encoders:/app/ComfyUI/models/audio_encoders
+      - ./User-Directories/ComfyUI/models/checkpoints:/app/ComfyUI/models/checkpoints
+      - ./User-Directories/ComfyUI/models/clip:/app/ComfyUI/models/clip
+      - ./User-Directories/ComfyUI/models/clip_vision:/app/ComfyUI/models/clip_vision
+      - ./User-Directories/ComfyUI/models/controlnet:/app/ComfyUI/models/controlnet
+      - ./User-Directories/ComfyUI/models/diffusers:/app/ComfyUI/models/diffusers
+      - ./User-Directories/ComfyUI/models/diffusion_models:/app/ComfyUI/models/diffusion_models
+      - ./User-Directories/ComfyUI/models/embeddings:/app/ComfyUI/models/embeddings
+      - ./User-Directories/ComfyUI/models/gligen:/app/ComfyUI/models/gligen
+      - ./User-Directories/ComfyUI/models/hypernetworks:/app/ComfyUI/models/hypernetworks
+      - ./User-Directories/ComfyUI/models/latent_upscale_models:/app/ComfyUI/models/latent_upscale_models
+      - ./User-Directories/ComfyUI/models/loras:/app/ComfyUI/models/loras
+      - ./User-Directories/ComfyUI/models/model_patches:/app/ComfyUI/models/model_patches
+      - ./User-Directories/ComfyUI/models/photomaker:/app/ComfyUI/models/photomaker
+      - ./User-Directories/ComfyUI/models/style_models:/app/ComfyUI/models/style_models
+      - ./User-Directories/ComfyUI/models/text_encoders:/app/ComfyUI/models/text_encoders
+      - ./User-Directories/ComfyUI/models/unet:/app/ComfyUI/models/unet
+      - ./User-Directories/ComfyUI/models/upscale_models:/app/ComfyUI/models/upscale_models
+      - ./User-Directories/ComfyUI/models/vae:/app/ComfyUI/models/vae
+      - ./User-Directories/ComfyUI/models/vae_approx:/app/ComfyUI/models/vae_approx
+      - ./User-Directories/ComfyUI/output:/app/ComfyUI/output
+      - ./User-Directories/ComfyUI/custom_nodes:/app/ComfyUI/custom_nodes
+      - ./User-Directories/ComfyUI/input:/app/ComfyUI/input
+      - ./User-Directories/ComfyUI/temp:/app/ComfyUI/temp
       - /etc/resolv.conf:/etc/resolv.conf:ro
     devices:
       - /dev/kfd:/dev/kfd
