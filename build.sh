@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ROCm 7.1 Docker Build and Push Script
+# ROCm 7.1 podman Build and Push Script
 # Builds and pushes fedora-rocm7.1, ollama-rocm7.1, stable-diffusion.cpp-rocm7.1, and comfyui-rocm7.1 images
 
 set -e
@@ -20,7 +20,7 @@ OLLAMA_IMAGE="ollama-rocm7.1"
 Dockerfiles_DIR="./Dockerfiles"
 
 echo -e "${BLUE}========================================${NC}"
-echo -e "${BLUE}    ROCm 7.1 Docker Build Script      ${NC}"
+echo -e "${BLUE}    ROCm 7.1 podman Build Script      ${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
@@ -39,15 +39,15 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-# Check if docker is available
-if ! command -v docker &> /dev/null; then
-    print_error "docker is not installed or not in PATH"
+# Check if podman is available
+if ! command -v podman &> /dev/null; then
+    print_error "podman is not installed or not in PATH"
     exit 1
 fi
 
 print_step "Building Fedora ROCm 7.1 base image..."
-echo -e "${YELLOW}Command: docker build -t ${FEDORA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.rocm-7.1 .${NC}"
-if docker build -t "${FEDORA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.rocm-7.1" .; then
+echo -e "${YELLOW}Command: podman build -t ${FEDORA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.rocm-7.1 .${NC}"
+if podman build -t "${FEDORA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.rocm-7.1" .; then
     print_success "Fedora ROCm 7.1 image built successfully"
 else
     print_error "Failed to build Fedora ROCm 7.1 image"
@@ -55,7 +55,7 @@ else
 fi
 
 print_step "Tagging Fedora ROCm 7.1 image for registry..."
-if docker tag "${FEDORA_IMAGE}:latest" "${REGISTRY}/${FEDORA_IMAGE}:latest"; then
+if podman tag "${FEDORA_IMAGE}:latest" "${REGISTRY}/${FEDORA_IMAGE}:latest"; then
     print_success "Tagged: ${REGISTRY}/${FEDORA_IMAGE}:latest"
 else
     print_error "Failed to tag Fedora ROCm 7.1 image"
@@ -63,7 +63,7 @@ else
 fi
 
 print_step "Pushing Fedora ROCm 7.1 image to registry..."
-if docker push "${REGISTRY}/${FEDORA_IMAGE}:latest"; then
+if podman push "${REGISTRY}/${FEDORA_IMAGE}:latest"; then
     print_success "Pushed: ${REGISTRY}/${FEDORA_IMAGE}:latest"
 else
     print_error "Failed to push Fedora ROCm 7.1 image"
@@ -88,9 +88,9 @@ else
 fi
 
 print_step "Building Ollama ROCm 7.1 image..."
-echo -e "${YELLOW}Command: docker build -t ${OLLAMA_IMAGE}:latest --build-arg FLAVOR=rocm .${NC}"
+echo -e "${YELLOW}Command: podman build -t ${OLLAMA_IMAGE}:latest --build-arg FLAVOR=rocm .${NC}"
 cd ollama-linux-amd-apu
-if docker build -t "${OLLAMA_IMAGE}:latest" --build-arg FLAVOR=rocm .; then
+if podman build -t "${OLLAMA_IMAGE}:latest" --build-arg FLAVOR=rocm .; then
     print_success "Ollama ROCm 7.1 image built successfully"
     cd ..
 else
@@ -99,7 +99,7 @@ else
 fi
 
 print_step "Tagging Ollama ROCm 7.1 image for registry..."
-if docker tag "${OLLAMA_IMAGE}:latest" "${REGISTRY}/${OLLAMA_IMAGE}:latest"; then
+if podman tag "${OLLAMA_IMAGE}:latest" "${REGISTRY}/${OLLAMA_IMAGE}:latest"; then
     print_success "Tagged: ${REGISTRY}/${OLLAMA_IMAGE}:latest"
 else
     print_error "Failed to tag Ollama ROCm 7.1 image"
@@ -107,7 +107,7 @@ else
 fi
 
 print_step "Pushing Ollama ROCm 7.1 image to registry..."
-if docker push "${REGISTRY}/${OLLAMA_IMAGE}:latest"; then
+if podman push "${REGISTRY}/${OLLAMA_IMAGE}:latest"; then
     print_success "Pushed: ${REGISTRY}/${OLLAMA_IMAGE}:latest"
 else
     print_error "Failed to push Ollama ROCm 7.1 image"
