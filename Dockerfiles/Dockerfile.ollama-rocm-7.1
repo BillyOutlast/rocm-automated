@@ -16,7 +16,7 @@ RUN yum install -y yum-utils \
     && yum-config-manager --add-repo https://dl.rockylinux.org/vault/rocky/8.5/AppStream/\$basearch/os/ \
     && rpm --import https://dl.rockylinux.org/pub/rocky/RPM-GPG-KEY-Rocky-8 \
     && dnf install -y yum-utils ccache gcc-toolset-10-gcc-10.2.1-8.2.el8 gcc-toolset-10-gcc-c++-10.2.1-8.2.el8 gcc-toolset-10-binutils-2.35-11.el8 \
-    && dnf install -y ccache \
+    && dnf install -y ccache git \
     && yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
 ENV PATH=/opt/rh/gcc-toolset-10/root/usr/bin:$PATH
 ARG VULKANVERSION
@@ -35,14 +35,14 @@ RUN yum install -y yum-utils \
     && yum-config-manager --add-repo https://dl.rockylinux.org/vault/rocky/8.5/AppStream/\$basearch/os/ \
     && rpm --import https://dl.rockylinux.org/pub/rocky/RPM-GPG-KEY-Rocky-8 \
     && dnf install -y yum-utils ccache gcc-toolset-10-gcc-10.2.1-8.2.el8 gcc-toolset-10-gcc-c++-10.2.1-8.2.el8 gcc-toolset-10-binutils-2.35-11.el8 \
-    && dnf install -y ccache \
+    && dnf install -y ccache git \
     && yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
 ENV PATH=/opt/rh/gcc-toolset-10/root/usr/bin:$PATH
 
 FROM --platform=linux/arm64 almalinux:8 AS base-arm64
 # install epel-release for ccache
 RUN yum install -y yum-utils epel-release \
-    && dnf install -y clang ccache \
+    && dnf install -y clang ccache git\
     && yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa/cuda-rhel8.repo
 ENV CC=clang CXX=clang++
 
@@ -161,7 +161,7 @@ RUN --mount=type=cache,target=/root/.ccache \
 
 
 FROM base AS build
-RUN git clone -b apu-optimizer https://github.com/phueper/ollama-linux-amd-apu.git /ollama
+RUN git clone https://github.com/phueper/ollama-linux-amd-apu.git /ollama
 WORKDIR /ollama
 COPY go.mod go.sum .
 RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
