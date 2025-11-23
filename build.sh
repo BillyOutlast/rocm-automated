@@ -46,8 +46,8 @@ if ! command -v docker &> /dev/null; then
 fi
 
 print_step "Building Fedora ROCm 7.1 base image..."
-echo -e "${YELLOW}Command: docker build -t ${FEDORA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.rocm-7.1${NC}"
-if docker build -t "${FEDORA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.rocm-7.1"; then
+echo -e "${YELLOW}Command: docker build -t ${FEDORA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.rocm-7.1 .${NC}"
+if docker build -t "${FEDORA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.rocm-7.1" .; then
     print_success "Fedora ROCm 7.1 image built successfully"
 else
     print_error "Failed to build Fedora ROCm 7.1 image"
