@@ -75,13 +75,6 @@ echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
 print_step "Building Ollama ROCm 7.1 image..."
-echo -e "${YELLOW}Command: bash ./ollama-build/build-ollama-binary.sh${NC}"
-if bash ./ollama-build/build-ollama-binary.sh; then
-    print_success "Ollama binary built successfully"
-else
-    print_error "Failed to build Ollama binary"
-    exit 1
-fi
 echo -e "${YELLOW}Command: docker build -t ${OLLAMA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1 .${NC}"
 if docker build -t "${OLLAMA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.ollama-rocm-7.1" .; then
     print_success "Ollama ROCm 7.1 image built successfully"
