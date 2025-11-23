@@ -19,11 +19,8 @@ WORKDIR /app/ComfyUI
 # Set environment to use the virtual environment and add ROCm runtime settings
 ENV PATH="/app/ComfyUI/venv/bin:$PATH" \
     VIRTUAL_ENV="/app/ComfyUI/venv" \
-    AMD_SERIALIZE_KERNEL=3 \
-    HIP_VISIBLE_DEVICES=0 \
     PYTORCH_ROCM_ARCH="${GPU_ARCH}" \
-    HSA_OVERRIDE_GFX_VERSION="${GPU_ARCH}" \
-    TORCH_USE_HIP_DSA=1
+    HSA_OVERRIDE_GFX_VERSION="${GPU_ARCH}" 
 
 # Expose default ComfyUI port
 EXPOSE 8188
