@@ -120,8 +120,8 @@ echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
 print_step "Building ComfyUI variants for different GPU architectures..."
-echo -e "${YELLOW}Command: bash ./build-comfyui-variants.sh${NC}"
-if bash ./build-comfyui-variants.sh; then
+echo -e "${YELLOW}Command: bash ./comfyui-build/build-comfyui-variants.sh${NC}"
+if bash ./comfyui-build/build-comfyui-variants.sh; then
     print_success "ComfyUI variants built successfully"
 else
     print_error "Failed to build ComfyUI variants"
@@ -129,8 +129,8 @@ else
 fi
 
 print_step "Building Stable-Diffusion variants for different GPU architectures..."
-echo -e "${YELLOW}Command: bash ./build-stable-diffusion-variants.sh${NC}"
-if bash ./build-stable-diffusion-variants.sh; then
+echo -e "${YELLOW}Command: bash ./build-scripts/build-stable-diffusion-variants.sh${NC}"
+if bash ./build-scripts/build-stable-diffusion-variants.sh; then
     print_success "Stable-Diffusion variants built successfully"
 else
     print_error "Failed to build Stable-Diffusion variants"
