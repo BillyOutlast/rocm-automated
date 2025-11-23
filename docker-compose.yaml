@@ -6,7 +6,9 @@ services:
       - HOSTNAME=open-webui
       - OLLAMA_BASE_URL=http://ollama:11434
     ports:
-      - "0.0.0.0:3000:8080"
+      - "3000:8080"
+    networks:
+      - rocm-network
     volumes:
       - ./open-webui:/app/backend/data
       - /etc/resolv.conf:/etc/resolv.conf:ro
@@ -23,6 +25,8 @@ services:
     container_name: ollama
     ports:
       - "11434:11434"
+    networks:
+      - rocm-network
     volumes:
       - ./ollama:/root/.ollama:Z
       - /etc/resolv.conf:/etc/resolv.conf:ro
@@ -56,6 +60,8 @@ services:
     container_name: stable-diffusion.cpp
     ports:
       - "7860:7860"
+    networks:
+      - rocm-network
     volumes:
       - ./sd.cpp-webui/outputs/any2video:/sd-webui/outputs/any2video:Z
       - ./sd.cpp-webui/outputs/img2img:/sd-webui/outputs/img2img:Z
@@ -89,6 +95,8 @@ services:
     container_name: comfyui
     ports:
       - "8188:8188"
+    networks:
+      - rocm-network
     volumes:
       - ./ComfyUI/models/audio_encoders:/app/ComfyUI/models/audio_encoders
       - ./ComfyUI/models/checkpoints:/app/ComfyUI/models/checkpoints
