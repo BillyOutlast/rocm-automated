@@ -45,31 +45,6 @@ if ! command -v podman &> /dev/null; then
     exit 1
 fi
 
-print_step "Building Fedora ROCm 7.1 base image..."
-echo -e "${YELLOW}Command: podman build -t ${FEDORA_IMAGE}:latest -f ${Dockerfiles_DIR}/Dockerfile.rocm-7.1 .${NC}"
-if podman build -t "${FEDORA_IMAGE}:latest" -f "${Dockerfiles_DIR}/Dockerfile.rocm-7.1" .; then
-    print_success "Fedora ROCm 7.1 image built successfully"
-else
-    print_error "Failed to build Fedora ROCm 7.1 image"
-    exit 1
-fi
-
-print_step "Tagging Fedora ROCm 7.1 image for registry..."
-if podman tag "${FEDORA_IMAGE}:latest" "${REGISTRY}/${FEDORA_IMAGE}:latest"; then
-    print_success "Tagged: ${REGISTRY}/${FEDORA_IMAGE}:latest"
-else
-    print_error "Failed to tag Fedora ROCm 7.1 image"
-    exit 1
-fi
-
-print_step "Pushing Fedora ROCm 7.1 image to registry..."
-if podman push "${REGISTRY}/${FEDORA_IMAGE}:latest"; then
-    print_success "Pushed: ${REGISTRY}/${FEDORA_IMAGE}:latest"
-else
-    print_error "Failed to push Fedora ROCm 7.1 image"
-    exit 1
-fi
-
 echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""

@@ -1,4 +1,4 @@
-FROM docker.io/getterup/fedora-rocm7.1:latest AS builder
+FROM rocm/dev-ubuntu-24.04:7.1-complete AS builder
 # vim: filetype=dockerfile
 
 ARG GFX_NAME=gfx1151
@@ -37,12 +37,12 @@ RUN cp /stable-diffusion.cpp/build/bin/sd /sd-webui/sd
 RUN chmod +x sdcpp_webui.sh
 
 # Runtime stage
-FROM docker.io/getterup/fedora-rocm7.1:latest AS runtime
+FROM rocm/dev-ubuntu-24.04:7.1-complete AS runtime
 
 
-RUN dnf install -y python3.13
-RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 100
-RUN alternatives --install /usr/bin/python python /usr/bin/python3.13 100
+RUN apt install -y python3.13
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.13 100
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.13 100
 
 # Create video group and add proper permissions
 RUN groupadd -g 44 video || true

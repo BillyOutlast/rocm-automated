@@ -1,28 +1,9 @@
 # ComfyUI with ROCm support for different AMD GPU architectures
-FROM docker.io/getterup/fedora-rocm7.1:latest
-
-# Build arguments for different PyTorch versions
-ARG GPU_ARCH="rocm7.1"
-
-# ROCm environment variables
-ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm \
-    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
-
-# Install system dependencies and ROCm
-RUN dnf update -y && \
-    dnf install -y git python3 python3-pip && \
-    dnf clean all
-
-# Set up library paths and ROCm environment
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH \
-    HIP_VISIBLE_DEVICES=0 \
-    AMD_SERIALIZE_KERNEL=3 \
-    PYTORCH_ROCM_ARCH="${GPU_ARCH}" \
-    HSA_OVERRIDE_GFX_VERSION="${GPU_ARCH}" \
-    TORCH_USE_HIP_DSA=1
+FROM rocm/dev-ubuntu-24.04:7.1-complete AS default
+RUN apt-get update \
+    && apt-get install -y ca-certificates libvulkan1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy ComfyUI repository and pre-built virtual environment
 WORKDIR /app
