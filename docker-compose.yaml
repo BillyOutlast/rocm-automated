@@ -99,7 +99,7 @@ services:
     environment:
       - HIP_VISIBLE_DEVICES=1
       - COMFYUI_ENABLE_ROCM=True
-      - GPU_ARCH="rocm7.1"
+      - GPU_ARCH=rocm7.1
     ports:
       - "8188:8188"
     networks:
