@@ -276,6 +276,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Ollama](https://github.com/ollama/ollama) - Local LLM inference engine
 - [Stable Diffusion CPP](https://github.com/leejet/stable-diffusion.cpp) - Efficient SD implementation
 - [rjmalagon/ollama-linux-amd-apu](https://github.com/rjmalagon/ollama-linux-amd-apu) - AMD APU optimizations
+- [ComfyUI](https://github.com/comfyanonymous/ComfyUI/) - Advanced node-based interface for Stable Diffusion workflows
+- [phueper/ollama-linux-amd-apu](https://github.com/phueper/ollama-linux-amd-apu/tree/ollama_main_rocm7) - Enhanced Ollama build with ROCm 7 optimizations
 
 ## 📞 Support
 
