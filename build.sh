@@ -74,8 +74,29 @@ echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
-git clone https://github.com/phueper/ollama-linux-amd-apu.git ollama-linux-amd-apu
+print_step "Checking/cloning Ollama ROCm repository..."
+if [ ! -d "ollama-linux-amd-apu" ]; then
+    echo -e "${YELLOW}Command: git clone https://github.com/phueper/ollama-linux-amd-apu.git ollama-linux-amd-apu${NC}"
+    if git clone https://github.com/phueper/ollama-linux-amd-apu.git ollama-linux-amd-apu; then
+        print_success "Repository cloned successfully"
+    else
+        print_error "Failed to clone repository"
+        exit 1
+    fi
+else
+    print_success "Repository already exists, skipping clone"
+fi
+
+print_step "Building Ollama ROCm 7.1 image..."
+echo -e "${YELLOW}Command: docker build -t ${OLLAMA_IMAGE}:latest --build-arg FLAVOR=rocm .${NC}"
 cd ollama-linux-amd-apu
+if docker build -t "${OLLAMA_IMAGE}:latest" --build-arg FLAVOR=rocm .; then
+    print_success "Ollama ROCm 7.1 image built successfully"
+    cd ..
+else
+    print_error "Failed to build Ollama ROCm 7.1 image"
+    exit 1
+fi
 docker build -t ${OLLAMA_IMAGE}:latest --build-arg FLAVOR=rocm .
 
 print_step "Tagging Ollama ROCm 7.1 image for registry..."
