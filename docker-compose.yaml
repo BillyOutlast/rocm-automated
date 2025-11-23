@@ -31,6 +31,7 @@ services:
     group_add:
       - video
     environment:
+      - HOSTNAME=ollama
       - OLLAMA_VULKAN=0
       - OLLAMA_DEBUG=2
       - OLLAMA_FLASH_ATTENTION=true
