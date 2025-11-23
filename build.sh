@@ -97,7 +97,6 @@ else
     print_error "Failed to build Ollama ROCm 7.1 image"
     exit 1
 fi
-docker build -t ${OLLAMA_IMAGE}:latest --build-arg FLAVOR=rocm .
 
 print_step "Tagging Ollama ROCm 7.1 image for registry..."
 if docker tag "${OLLAMA_IMAGE}:latest" "${REGISTRY}/${OLLAMA_IMAGE}:latest"; then
