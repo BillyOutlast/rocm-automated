@@ -15,8 +15,6 @@ fi
 
 cd /app
 
-set -e
-
 echo "=== ComfyUI Multi-Architecture Build Script ==="
 echo "Creating optimized builds for different AMD GPU architectures..."
 
