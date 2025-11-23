@@ -94,7 +94,7 @@ services:
       - seccomp=unconfined
       - label=disable
   comfyui:
-    image: getterup/comfyui:rocm7.1
+    image: getterup/comfyui:latest
     container_name: comfyui
     environment:
       - HIP_VISIBLE_DEVICES=1

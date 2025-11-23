@@ -17,6 +17,7 @@ NC='\033[0m' # No Color
 REGISTRY="docker.io/getterup"
 FEDORA_IMAGE="fedora-rocm7.1"
 OLLAMA_IMAGE="ollama-rocm7.1"
+COMFYUI_IMAGE="comfyui-rocm7.1"
 Dockerfiles_DIR="./Dockerfiles"
 
 echo -e "${BLUE}========================================${NC}"
@@ -97,18 +98,31 @@ echo ""
 echo -e "${BLUE}----------------------------------------${NC}"
 echo ""
 
-cd comfyui-build
-
-print_step "Building ComfyUI variants for different GPU architectures..."
-echo -e "${YELLOW}Command: bash ./build-comfyui-variants.sh${NC}"
-if bash ./build-comfyui-variants.sh; then
-    print_success "ComfyUI variants built successfully"
+print_step "Building ComfyUI ROCm 7.1 image..."
+echo -e "${YELLOW}Command: podman build -t ${COMFYUI_IMAGE}:latest -f Dockerfiles/Dockerfile.comfyui-rocm7.1 .${NC}"
+if podman build -t "${COMFYUI_IMAGE}:latest" -f Dockerfiles/Dockerfile.comfyui-rocm7.1 .; then
+    print_success "ComfyUI ROCm 7.1 image built successfully"
+    cd ..
 else
-    print_error "Failed to build ComfyUI variants"
+    print_error "Failed to build Ollama ROCm 7.1 image"
     exit 1
 fi
 
-cd ..
+print_step "Tagging ComfyUI ROCm 7.1 image for registry..."
+if podman tag "${COMFYUI_IMAGE}:latest" "${REGISTRY}/${COMFYUI_IMAGE}:latest"; then
+    print_success "Tagged: ${REGISTRY}/${COMFYUI_IMAGE}:latest"
+else
+    print_error "Failed to tag ComfyUI ROCm 7.1 image"
+    exit 1
+fi
+
+print_step "Pushing ComfyUI ROCm 7.1 image to registry..."
+if podman push "${REGISTRY}/${COMFYUI_IMAGE}:latest"; then
+    print_success "Pushed: ${REGISTRY}/${COMFYUI_IMAGE}:latest"
+else
+    print_error "Failed to push ComfyUI ROCm 7.1 image"
+    exit 1
+fi
 
 print_step "Building Stable-Diffusion variants for different GPU architectures..."
 echo -e "${YELLOW}Command: bash ./build-scripts/build-stable-diffusion-variants.sh${NC}"
