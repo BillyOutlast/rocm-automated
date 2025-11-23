@@ -7,15 +7,6 @@ RUN apt-get update \
 
 # Copy ComfyUI repository and pre-built virtual environment
 WORKDIR /app
-COPY ComfyUI /app/ComfyUI
-
-# Copy the appropriate virtual environment based on GPU architecture
-# The venv should be created by running create-venv.sh on the host
-ARG GPU_ARCH="rocm7.1"
-COPY ${GPU_ARCH} /app/ComfyUI/venv
-
-# Set working directory to ComfyUI
-WORKDIR /app/ComfyUI
 
 # Set environment to use the virtual environment and add ROCm runtime settings
 ENV PATH="/app/ComfyUI/venv/bin:$PATH" \
@@ -26,5 +17,8 @@ ENV PATH="/app/ComfyUI/venv/bin:$PATH" \
 # Expose default ComfyUI port
 EXPOSE 8188
 
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 # Set the default command to run ComfyUI with ROCm optimizations
-CMD ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188", "--force-fp16"] 
+ENTRYPOINT ["/docker-entrypoint.sh"]

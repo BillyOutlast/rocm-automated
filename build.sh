@@ -99,19 +99,6 @@ echo ""
 
 cd comfyui-build
 
-print_step "Creating/updating virtual environment..."
-echo -e "${YELLOW}Command: bash ./create-venv.sh${NC}"
-if bash ./create-venv.sh; then
-    print_success "Virtual environment created/updated successfully"
-else
-    print_error "Failed to create/update virtual environment"
-    exit 1
-fi
-
-echo ""
-echo -e "${BLUE}----------------------------------------${NC}"
-echo ""
-
 print_step "Building ComfyUI variants for different GPU architectures..."
 echo -e "${YELLOW}Command: bash ./build-comfyui-variants.sh${NC}"
 if bash ./build-comfyui-variants.sh; then

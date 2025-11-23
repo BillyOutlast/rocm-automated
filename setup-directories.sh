@@ -80,6 +80,7 @@ BASE_DIR="./ComfyUI"
 
 # Create model directories
 echo "🤖 Creating ComfyUI model directories..."
+mkdir -p "${BASE_DIR}/venv"
 mkdir -p "${BASE_DIR}/models/audio_encoders"
 mkdir -p "${BASE_DIR}/models/checkpoints"
 mkdir -p "${BASE_DIR}/models/clip"

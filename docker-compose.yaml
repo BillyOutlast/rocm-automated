@@ -96,12 +96,17 @@ services:
   comfyui:
     image: getterup/comfyui:rocm7.1
     container_name: comfyui
+    environment:
+      - HIP_VISIBLE_DEVICES=1
+      - COMFYUI_ENABLE_ROCM=True
+      - GPU_ARCH="rocm7.1"
     ports:
       - "8188:8188"
     networks:
       rocm-network:
         ipv4_address: 172.28.0.5
     volumes:
+      - ./User-Directories/ComfyUI/venv/audio_encoders:/app/ComfyUI/venv
       - ./User-Directories/ComfyUI/models/audio_encoders:/app/ComfyUI/models/audio_encoders
       - ./User-Directories/ComfyUI/models/checkpoints:/app/ComfyUI/models/checkpoints
       - ./User-Directories/ComfyUI/models/clip:/app/ComfyUI/models/clip
@@ -132,9 +137,6 @@ services:
       - /dev/dri:/dev/dri
     group_add:
       - video
-    environment:
-      - HIP_VISIBLE_DEVICES=1
-      - COMFYUI_ENABLE_ROCM=True
     restart: unless-stopped
     security_opt:
       - seccomp=unconfined
