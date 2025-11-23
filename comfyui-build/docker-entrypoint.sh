@@ -15,36 +15,39 @@ fi
 
 cd /app
 
+set -e
 
-# Update ComfyUI repository
 echo "Updating ComfyUI repository..."
 if command -v git &> /dev/null; then
     echo "Git found!"
 else
     echo "Git not found, attempting to install..."
     if command -v apt-get &> /dev/null; then
-        apt-get update && apt-get install -y git
+        apt-get update && apt-get install -y git python3-venv python3-full
     else
         echo "Warning: Git not available and cannot install. Skipping repository update."
+        exit 1
     fi
 fi
 
 echo "=== ComfyUI Multi-Architecture Build Script ==="
 echo "Creating optimized builds for different AMD GPU architectures..."
+
 # Clone ComfyUI if it doesn't exist or if it's not a valid git repository
 if [ ! -d "ComfyUI" ]; then
     echo "ComfyUI directory doesn't exist, cloning repository..."
     git clone https://github.com/comfyanonymous/ComfyUI.git
 elif [ ! -d "ComfyUI/.git" ]; then
-    echo "ComfyUI directory exists but is not a valid git repository, clearing contents..."
-    rm -rf ComfyUI/*
-    rm -rf ComfyUI/.*[!.]*
+    echo "ComfyUI directory exists but is not a valid git repository, clearing and re-cloning..."
+    rm -rf ComfyUI
     git clone https://github.com/comfyanonymous/ComfyUI.git
 else
-    echo "ComfyUI directory already exists and is a valid git repository, skipping clone..."
+    echo "ComfyUI directory already exists and is a valid git repository..."
+    cd ComfyUI
+    echo "Pulling latest updates..."
+    git pull
+    cd ..
 fi
-cd ComfyUI
-git pull
 
 
 # Set PyTorch index URL based on GPU_ARCH if specified
@@ -68,14 +71,21 @@ if [ "$GPU_ARCH" = "gfx120X" ]; then
     PYTORCH_INDEX_URL="https://rocm.nightlies.amd.com/v2/gfx120X-all/"
 fi
 
+cd ComfyUI
+echo "Creating Python virtual environment..."
 python3 -m venv venv
+echo "Activating virtual environment..."
 . venv/bin/activate
+echo "Upgrading pip..."
 pip install --upgrade pip
+echo "Installing PyTorch with ROCm support..."
 if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
     pip install --pre torch torchvision torchaudio --extra-index-url ${PYTORCH_INDEX_URL}
 else
     pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}
 fi
-pip install -r ComfyUI/requirements.txt
+echo "Installing ComfyUI requirements..."
+pip install -r requirements.txt
 
+echo "Starting ComfyUI..."
 python main.py --listen 0.0.0.0 --port 8188 --force-fp16

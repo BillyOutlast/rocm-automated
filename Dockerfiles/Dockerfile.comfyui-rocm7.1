@@ -1,7 +1,7 @@
 # ComfyUI with ROCm support for different AMD GPU architectures
 FROM rocm/dev-ubuntu-24.04:7.1-complete AS default
 RUN apt-get update \
-    && apt-get install -y ca-certificates libvulkan1 git \
+    && apt-get install -y ca-certificates libvulkan1 git python3-venv python3-full python3-pip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
