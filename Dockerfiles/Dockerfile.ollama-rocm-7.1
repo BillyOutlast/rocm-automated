@@ -1,33 +1,6 @@
 FROM docker.io/getterup/fedora-rocm7.1:latest
 # vim: filetype=dockerfile
 
-RUN <<'EOF'
-tee /etc/yum.repos.d/rocm.repo <<REPO
-[ROCm-7.1]
-name=ROCm7.1
-baseurl=https://repo.radeon.com/rocm/el9/7.1/main
-enabled=1
-priority=50
-gpgcheck=1
-gpgkey=https://repo.radeon.com/rocm/rocm.gpg.key
-REPO
-EOF
-
-RUN dnf -y --nodocs --setopt=install_weak_deps=False \
-    --exclude='*sdk*' --exclude='*samples*' --exclude='*-doc*' --exclude='*-docs*' \
-    install \
-      rocm-runtime rocm-device-libs hip-runtime-amd \
-      rocblas hipblas rocminfo \
-      ca-certificates \
- && dnf clean all && rm -rf /var/cache/dnf/*
-
-# ROCm environment variables
-ENV ROCM_PATH=/opt/rocm \
-    HIP_PATH=/opt/rocm \
-    HSA_PATH=/opt/rocm/hsa \
-    HIP_CLANG_PATH=/opt/rocm/llvm/bin \
-    HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
-    PATH=/opt/rocm/bin:/opt/rocm/llvm/bin:$PATH
 
 ARG FLAVOR=rocm
 ARG PARALLEL=8
@@ -37,44 +10,12 @@ ARG CMAKEVERSION=3.31.2
 
 
 COPY ollama-build/ollama-src /ollama-src
-
-WORKDIR /ollama-src
-
-
-
-ARG CMAKEVERSION
-RUN curl -fsSL https://github.com/Kitware/CMake/releases/download/v${CMAKEVERSION}/cmake-${CMAKEVERSION}-linux-$(uname -m).tar.gz | tar xz -C /usr/local --strip-components 1
-ENV LDFLAGS=-s
-
-ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
-ARG PARALLEL
-RUN --mount=type=cache,target=/root/.ccache \
-    cmake --preset 'ROCm 7' -DOLLAMA_RUNNER_DIR="rocm_v7" \
-        && cmake --build --parallel ${PARALLEL} --preset 'ROCm 7' \
-        && cmake --install build --component HIP --strip --parallel ${PARALLEL} 
-RUN rm -f dist/lib/ollama/rocm/rocblas/library/*gfx90[06]*
-RUN curl -fsSL https://golang.org/dl/go$(awk '/^go/ { print $2 }' go.mod).linux-$(case $(uname -m) in x86_64) echo amd64 ;; aarch64) echo arm64 ;; esac).tar.gz | tar xz -C /usr/local
-ENV PATH=/usr/local/go/bin:$PATH
-RUN go mod download
-ARG GOFLAGS="'-ldflags=-w -s'"
-ENV CGO_ENABLED=1
-ARG CGO_CFLAGS
-ARG CGO_CXXFLAGS
-RUN git config --global --add safe.directory /ollama-src
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -trimpath -buildmode=pie -buildvcs=false -o /usr/bin/ollama .
-
-
-RUN cp -R dist/lib/ollama /usr/lib/ollama
+COPY ollama-build/ollama-build-output/bin/ollama /usr/bin/ollama
+COPY ollama-build/ollama-build-output/lib/ollama /usr/lib/ollama
 
 
 # Set executable permissions and create rocm_v7 symlink
-RUN chmod +x /usr/bin/ollama \
-    && ln -sf /usr/lib/ollama/rocm /usr/lib/ollama/rocm_v7 \
-    && rocminfo || echo "rocminfo failed - will work at runtime with GPU access"
-
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:/usr/lib/ollama:/usr/lib/ollama/rocm:/usr/lib/ollama/rocm_v7:$LD_LIBRARY_PATH 
-
+RUN chmod +x /usr/bin/ollama 
 
 # Expose port
 ENV OLLAMA_HOST=0.0.0.0:11434
