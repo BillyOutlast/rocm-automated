@@ -56,9 +56,17 @@ RUN git clone -b apu-optimizer https://github.com/rjmalagon/ollama-linux-amd-apu
 ENV LDFLAGS=-s
 ENV PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH
 
-# Build llama.cpp with ROCm support
+# Build llama.cpp with ROCm support for AMD GPUs
 RUN --mount=type=cache,target=/root/.ccache \
-    cmake --preset 'ROCm 7' -DOLLAMA_RUNNER_DIR="rocm_v7" -DGGML_VULKAN=OFF \
+    cmake --preset 'ROCm 7' \
+        -DOLLAMA_RUNNER_DIR="rocm_v7" \
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DSD_HIPBLAS=ON \
+        -DGGML_VULKAN=OFF \
+        -DAMDGPU_TARGETS="gfx1100,gfx1151" \
+        -DROCM_PATH=/opt/rocm \
+        -DHIP_PATH=/opt/rocm \
         && cmake --build --parallel ${PARALLEL} --preset 'ROCm 7' \
         && cmake --install build --component HIP --strip --parallel ${PARALLEL}
 
@@ -120,7 +128,9 @@ ENV ROCM_PATH=/opt/rocm \
     HIP_CLANG_PATH=/opt/rocm/llvm/bin \
     HIP_DEVICE_LIB_PATH=/opt/rocm/amdgcn/bitcode \
     HSA_ENABLE_SDMA=0 \
-    HSA_OVERRIDE_GFX_VERSION=11.5.1 \
+    HSA_OVERRIDE_GFX_VERSION=11.0.0 \
+    GPU_MAX_ALLOC_PERCENT=100 \
+    GPU_MAX_HEAP_SIZE=100 \
     OLLAMA_FLASH_ATTENTION=true \
     OLLAMA_KV_CACHE_TYPE=q8_0 \
     OLLAMA_DEBUG=2 \
