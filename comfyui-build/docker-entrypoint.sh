@@ -35,7 +35,7 @@ echo "Creating optimized builds for different AMD GPU architectures..."
 
 # Configure git to handle ownership issues in Docker containers
 git config --global --add safe.directory /app/ComfyUI
-git config --global init.defaultBranch main
+git config --global init.defaultBranch master
 
 # Clone ComfyUI if it doesn't exist or if it's not a valid git repository
 if [ ! -d "ComfyUI" ]; then
@@ -50,8 +50,8 @@ elif [ ! -d "ComfyUI/.git" ]; then
     git remote add origin https://github.com/comfyanonymous/ComfyUI.git
     echo "Fetching latest ComfyUI code..."
     git fetch origin
-    git checkout -f main || git checkout -f master
-    git reset --hard origin/main || git reset --hard origin/master
+    git checkout -f master || git checkout -f main
+    git reset --hard origin/master || git reset --hard origin/main
     cd ..
 else
     echo "ComfyUI directory already exists and is a valid git repository..."
