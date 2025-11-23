@@ -40,6 +40,7 @@ services:
       - OLLAMA_FLASH_ATTENTION=1
       - OLLAMA_GPU_OVERHEAD=0
       - OLLAMA_KEEP_ALIVE=1h
+      - OLLAMA_LIBRARY_PATH="/usr/lib/ollama/rocm_v7"
     restart: unless-stopped
     cap_add:
       - SYS_PTRACE
