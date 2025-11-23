@@ -124,6 +124,7 @@ echo '=== Setting up build environment ==='
 export PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:\$PATH
 export LDFLAGS=-s
 export PARALLEL=${PARALLEL}
+git config --global --add safe.directory /ollama-src
 
 export HSA_OVERRIDE_GFX_VERSION_0=10.3.0
 export HSA_OVERRIDE_GFX_VERSION_1=11.0.0
