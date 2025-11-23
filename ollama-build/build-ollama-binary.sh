@@ -94,11 +94,6 @@ docker run -d \
     --security-opt label=disable \
     --cap-add SYS_PTRACE \
     --ipc host \
-    -e PATH=/opt/rocm/hcc/bin:/opt/rocm/hip/bin:/opt/rocm/bin:/opt/rocm/hcc/bin:$PATH \
-    -e PARALLEL=${PARALLEL} \
-    -e CMAKEVERSION=${CMAKEVERSION} \
-    -e LDFLAGS=-s \
-    -e CGO_ENABLED=1 \
     --workdir "${MOUNT_SOURCE_PATH}" \
     "${BASE_IMAGE}" \
     sleep infinity
