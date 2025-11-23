@@ -54,32 +54,45 @@ rocminfo | grep "Name:"
 export HSA_OVERRIDE_GFX_VERSION=11.0.0
 ```
 
-### 3. Build Images
+### 3. Download and Start Services
 ```bash
-# Make build script executable
-chmod +x build.sh
-
-# Build all Docker images
-./build.sh
-```
-
-### 4. Start Services
-```bash
-# Start all services
+# Pull the latest prebuilt images and start all services
 docker-compose up -d
 
 # View logs
 docker-compose logs -f
 ```
 
+### Alternative: Build Images Locally
+If you prefer to build the images locally instead of using prebuilt ones:
+```bash
+# Make build script executable
+chmod +x build.sh
+
+# Build all Docker images
+./build.sh
+
+# Then start services
+docker-compose up -d
+```
+
 ## 🐳 Docker Images
 
-### Base Images
-- **`getterup/fedora-rocm7.1`**: Fedora 43 with ROCm 7.1 runtime and development tools
-- **`getterup/ollama-rocm7.1`**: Ollama with ROCm 7.1 backend for LLM inference
+### Available Prebuilt Images
+- **`getterup/ollama-rocm7.1:latest`**: Ollama with ROCm 7.1 backend for LLM inference
+- **`getterup/stable-diffusion.cpp-rocm7.1:gfx1151`**: Stable Diffusion with ROCm 7.1 acceleration
+- **`getterup/comfyui:rocm7.1`**: ComfyUI with ROCm 7.1 support
+- **`ghcr.io/open-webui/open-webui:main`**: Web interface for Ollama
 
-### Build Process
-The automated build script creates optimized images with:
+### What's Included
+These prebuilt images come with:
+- ROCm 7.1 runtime libraries
+- GPU-specific optimizations
+- Performance tuning for inference workloads
+- Ready-to-run configurations
+
+### Build Process (Optional)
+The automated build script can create custom images with:
 - ROCm 7.1 runtime libraries
 - GPU-specific optimizations
 - Performance tuning for inference workloads
