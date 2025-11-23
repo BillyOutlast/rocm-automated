@@ -65,7 +65,12 @@ if [ -d "${SOURCE_DIR}" ]; then
     )
 else
     echo "Cloning Ollama repository..."
-    git clone -b apu-optimizer "${OLLAMA_REPO}" "${SOURCE_DIR}"
+    git clone "${OLLAMA_REPO}" "${SOURCE_DIR}"
+    cd "${SOURCE_DIR}"
+    # Reset to clean state and pull latest
+    git fetch origin
+    git checkout apu-optimizer
+    git reset --hard origin/apu-optimizer
 fi
 
 echo "✓ Repository ready at: ${SOURCE_DIR}"
