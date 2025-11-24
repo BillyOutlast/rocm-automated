@@ -110,7 +110,7 @@ services:
       - HCC_AMDGPU_TARGET="gfx1100"   # Change for your GPU
       - PYTORCH_ROCM_ARCH="gfx1100"   # e.g., gfx1030 for RX 6800/6900
     # === Memory allocator tuning ===
-      - PYTORCH_HIP_ALLOC_CONF="garbage_collection_threshold:0.6,max_split_size_mb:6144"
+      - PYTORCH_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:6144
     # === Precision and performance ===
       - TORCH_BLAS_PREFER_HIPBLASLT=0
       - TORCHINDUCTOR_MAX_AUTOTUNE_GEMM_BACKENDS="CK,TRITON,ROCBLAS"
