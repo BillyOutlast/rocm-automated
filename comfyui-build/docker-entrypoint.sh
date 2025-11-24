@@ -119,10 +119,12 @@ cd custom_nodes
 echo "Installing ComfyUI Manager..."
 if [ ! -d "comfyui-manager" ]; then
     git clone https://github.com/ltdrdata/ComfyUI-Manager comfyui-manager
-    cd comfyui-manager && pip install -r requirements.txt && cd ..
 else
     echo "ComfyUI Manager already exists, skipping..."
 fi
+echo "Installing ComfyUI Manager requirements..."
+cd comfyui-manager && pip install -r requirements.txt && cd ..
+
 
 echo "Installing ComfyUI Multi-GPU Support..."
 if [ ! -d "comfyui-multigpu" ]; then
@@ -137,7 +139,7 @@ echo "Moving back to ComfyUI root"
 cd /app/ComfyUI
 
 echo "Installing additional Python packages..."
-pip install accelerate deepdiff gguf git
+pip install accelerate deepdiff gguf
 
 echo "Starting ComfyUI..."
 if [ -f "start.sh" ]; then
