@@ -133,6 +133,7 @@ services:
       - HSA_ENABLE_SDMA=1
       - MIOPEN_FIND_MODE=2
       - MIOPEN_ENABLE_CACHE=1
+      - MIGRAPHX_MLIR_USE_SPECIFIC_OPS="attention"
     ports:
       - "8188:8188"
     networks:
