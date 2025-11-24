@@ -100,6 +100,8 @@ if [ -z "${PYTORCH_INDEX_URL}" ]; then
     PYTORCH_INDEX_URL="https://download.pytorch.org/whl/nightly/rocm7.1"
 fi
 
+pip uninstall torch torchvision torchaudio pytorch-triton-rocm 
+
 echo "Using PyTorch index URL: ${PYTORCH_INDEX_URL}"
 if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
     pip install --pre torch torchvision torchaudio pytorch-triton-rocm --extra-index-url ${PYTORCH_INDEX_URL}
