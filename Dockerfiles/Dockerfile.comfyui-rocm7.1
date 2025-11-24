@@ -8,15 +8,15 @@ RUN apt-get install -y ca-certificates libvulkan1 git python3-venv python3-full 
 
 
 # Install ROCm libraries required for PyTorch and ComfyUI
-RUN apt-get install -y migraphx
+#RUN apt-get install -y migraphx
  
 #install dependencies for libgthread
-RUN apt-get install -y \
-       libglib2.0-0 libgthread-2.0-0 libgtk-3-0 libgdk-pixbuf2.0-0 \
-       libgl1 libglib2.0-dev libsm6 libxext6 libxrender-dev \
-       libgomp1 libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
-       libegl1 libxrandr2 libxss1 libxcursor1 libxcomposite1 libxdamage1 \
-       libxfixes3 libxi6 libxinerama1 libxrandr2 libxrender1
+#RUN apt-get install -y \
+#       libglib2.0-0 libgthread-2.0-0 libgtk-3-0 libgdk-pixbuf2.0-0 \
+#       libgl1 libglib2.0-dev libsm6 libxext6 libxrender-dev \
+#       libgomp1 libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
+#       libegl1 libxrandr2 libxss1 libxcursor1 libxcomposite1 libxdamage1 \
+#       libxfixes3 libxi6 libxinerama1 libxrandr2 libxrender1
 
 RUN  apt-get clean
 
