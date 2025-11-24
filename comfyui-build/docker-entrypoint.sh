@@ -114,6 +114,7 @@ pip install -r requirements.txt
 pip install ultralytics
 pip install onnxruntime-rocm
 
+# Set up ROCm library path
 export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH
 
 echo "Starting ComfyUI..."
