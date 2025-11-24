@@ -97,12 +97,12 @@ services:
     image: docker.io/getterup/comfyui-rocm7.1:latest
     container_name: comfyui
     environment:
-      - COMFYUI_ENABLE_ROCM=True
+    #  - COMFYUI_ENABLE_ROCM=True
       - GPU_ARCH=gfx110X
-      - PYTORCH_TUNABLEOP_ENABLED=0
-      - AMD_SERIALIZE_KERNEL=1
-      - MIOPEN_USER_DB_PATH=/tmp/.miopen
-      - MIOPEN_CUSTOM_CACHE_DIR=/tmp/.miopen
+    #  - PYTORCH_TUNABLEOP_ENABLED=0
+    #  - AMD_SERIALIZE_KERNEL=1
+    #  - MIOPEN_USER_DB_PATH=/tmp/.miopen
+    #  - MIOPEN_CUSTOM_CACHE_DIR=/tmp/.miopen
       # === ROCm paths ===
       - HIP_VISIBLE_DEVICES=0
       - RROCR_VISIBLE_DEVICES=1
