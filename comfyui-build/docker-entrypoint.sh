@@ -107,8 +107,8 @@ pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}
 #pip install --upgrade flash_attn --no-build-isolation
 echo "Installing ComfyUI requirements..."
 pip install -r requirements.txt
-pip install ultralytics
-pip install onnxruntime-rocm
+#pip install ultralytics
+#pip install onnxruntime-rocm
 
 # Set up ROCm library path
 export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH
