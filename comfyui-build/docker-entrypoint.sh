@@ -149,6 +149,14 @@ else
     echo "ComfyUI-Crystools already exists, skipping..."
 fi
 
+echo "Installing ComfyUI-Distributed..."
+if [ ! -d "ComfyUI-Distributed" ]; then
+    git clone https://github.com/robertvoy/ComfyUI-Distributed.git ComfyUI-Distributed
+    cd ComfyUI-Distributed && pip install -r requirements.txt && cd ..
+else
+    echo "ComfyUI-Distributed already exists, skipping..."
+fi
+
 
 
 echo "Custom nodes installation complete."
