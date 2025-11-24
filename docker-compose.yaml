@@ -97,9 +97,9 @@ services:
     image: docker.io/getterup/comfyui-rocm7.1:latest
     container_name: comfyui
     environment:
-      - ROCR_VISIBLE_DEVICES=1
+      #- ROCR_VISIBLE_DEVICES=1
       - COMFYUI_ENABLE_ROCM=True
-      - GPU_ARCH=gfx110X
+      - GPU_ARCH=rocm7.1
       - PYTORCH_TUNABLEOP_ENABLED=0
       - MIOPEN_FIND_MODE=NORMAL
       - TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1
@@ -107,8 +107,8 @@ services:
       - MIOPEN_USER_DB_PATH=/tmp/.miopen
       - MIOPEN_CUSTOM_CACHE_DIR=/tmp/.miopen
     # === GPU targeting ===
-      - HCC_AMDGPU_TARGET="gfx1100"   # Change for your GPU
-      - PYTORCH_ROCM_ARCH="gfx1100"   # e.g., gfx1030 for RX 6800/6900
+    # - HCC_AMDGPU_TARGET="gfx1100"   # Change for your GPU
+    # - PYTORCH_ROCM_ARCH="gfx1100"   # e.g., gfx1030 for RX 6800/6900
     # === Memory allocator tuning ===
       - PYTORCH_ALLOC_CONF=garbage_collection_threshold:0.6,max_split_size_mb:6144
     # === Precision and performance ===
