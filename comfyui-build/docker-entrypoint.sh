@@ -102,10 +102,11 @@ fi
 
 echo "Using PyTorch index URL: ${PYTORCH_INDEX_URL}"
 if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
-    pip install --pre torch torchvision torchaudio --extra-index-url ${PYTORCH_INDEX_URL}
+    pip install --pre torch torchvision torchaudio pytorch-triton-rocm --extra-index-url ${PYTORCH_INDEX_URL}
 else
-    pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}
+    pip install --pre torch torchvision torchaudio pytorch-triton-rocm --index-url ${PYTORCH_INDEX_URL}
 fi
+pip install flash-attn --index-url https://pypi.org/simple
 echo "Installing ComfyUI requirements..."
 pip install -r requirements.txt
 
@@ -116,7 +117,7 @@ if [ -f "start.sh" ]; then
     ./start.sh
 else
     echo "No start.sh found, creating default startup script..."
-    echo "python main.py --listen 0.0.0.0 --port 8188 --use-split-cross-attention" > start.sh
+    echo "python main.py --listen 0.0.0.0 --port 8188 --use-split-cross-attention --use-quad-cross-attention" > start.sh
     chmod +x start.sh
     ./start.sh
 fi
