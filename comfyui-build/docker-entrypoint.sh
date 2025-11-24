@@ -102,11 +102,7 @@ fi
 
 
 echo "Using PyTorch index URL: ${PYTORCH_INDEX_URL}"
-if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
-    pip install --pre torch torchvision torchaudio --extra-index-url ${PYTORCH_INDEX_URL}
-else
-    pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}
-fi
+pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}
 # TO debug flash_attn issues, temporarily disabling its installation
 #pip install --upgrade flash_attn --no-build-isolation
 echo "Installing ComfyUI requirements..."
