@@ -140,6 +140,7 @@ services:
       rocm-network:
         ipv4_address: 172.28.0.5
     volumes:
+      - ./comfyui-build/docker-entrypoint.sh:/docker-entrypoint.sh
       - ./User-Directories/ComfyUI/:/app/ComfyUI:Z
       - /etc/resolv.conf:/etc/resolv.conf:ro
     devices:
