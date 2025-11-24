@@ -100,15 +100,15 @@ if [ -z "${PYTORCH_INDEX_URL}" ]; then
     PYTORCH_INDEX_URL="https://download.pytorch.org/whl/nightly/rocm7.1"
 fi
 
-pip uninstall torch torchvision torchaudio pytorch-triton-rocm 
 
 echo "Using PyTorch index URL: ${PYTORCH_INDEX_URL}"
 if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
-    pip install --pre torch torchvision torchaudio pytorch-triton-rocm --extra-index-url ${PYTORCH_INDEX_URL}
+    pip install  --upgrade --pre torch torchvision torchaudio pytorch-triton-rocm --extra-index-url ${PYTORCH_INDEX_URL}
 else
-    pip install --pre torch torchvision torchaudio pytorch-triton-rocm --index-url ${PYTORCH_INDEX_URL}
+    pip install  --upgrade --pre torch torchvision torchaudio pytorch-triton-rocm --index-url ${PYTORCH_INDEX_URL}
 fi
-pip install flash-attn
+# TO debug flash_attn issues, temporarily disabling its installation
+#pip install --upgrade flash_attn --no-build-isolation
 echo "Installing ComfyUI requirements..."
 pip install -r requirements.txt
 
@@ -119,7 +119,7 @@ if [ -f "start.sh" ]; then
     ./start.sh
 else
     echo "No start.sh found, creating default startup script..."
-    echo "python main.py --listen 0.0.0.0 --port 8188 --use-split-cross-attention --use-quad-cross-attention" > start.sh
+    echo "python main.py --listen 0.0.0.0 --port 8188 --use-quad-cross-attention" > start.sh
     chmod +x start.sh
     ./start.sh
 fi
