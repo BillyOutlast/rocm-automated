@@ -293,6 +293,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## ⚠️ Known Hardware Limitations
+
+### External GPU Enclosures
+- **AOOSTAR AG02 EGPU**: Does not support Resizable BAR in Linux (tested on Fedora 42). This may impact performance with large models requiring significant VRAM transfers.
+
+
 <div align="center">
 
 **⭐ Star this repository if it helped you! ⭐**
