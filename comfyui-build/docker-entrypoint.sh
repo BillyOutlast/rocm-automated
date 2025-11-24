@@ -113,13 +113,27 @@ pip install -r requirements.txt
 # Set up ROCm library path
 #export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH
 
-echo "Installing ComfyUI Manager..."
 cd custom_nodes
-git clone https://github.com/ltdrdata/ComfyUI-Manager comfyui-manager
-cd comfyui-manager && pip install -r requirements.txt && cd ..
 
-#Moving back to ComfyUI root
-cd ..
+echo "Installing ComfyUI Manager..."
+if [ ! -d "comfyui-manager" ]; then
+    git clone https://github.com/ltdrdata/ComfyUI-Manager comfyui-manager
+    cd comfyui-manager && pip install -r requirements.txt && cd ..
+else
+    echo "ComfyUI Manager already exists, skipping..."
+fi
+
+echo "Installing ComfyUI Multi-GPU Support..."
+if [ ! -d "comfyui-multigpu" ]; then
+    git clone https://github.com/pollockjj/ComfyUI-MultiGPU.git comfyui-multigpu
+else
+    echo "ComfyUI Multi-GPU already exists, skipping..."
+fi
+
+echo "Custom nodes installation complete."
+
+echo "Moving back to ComfyUI root"
+cd /app/ComfyUI
 
 echo "Starting ComfyUI..."
 if [ -f "start.sh" ]; then
@@ -128,7 +142,7 @@ if [ -f "start.sh" ]; then
     ./start.sh
 else
     echo "No start.sh found, creating default startup script..."
-    echo "python main.py --listen 0.0.0.0 --port 8188 --use-quad-cross-attention" > start.sh
+    echo "python main.py --listen 0.0.0.0 --port 8188 --normalvram --reserve-vram 2 --use-quad-cross-attention" > start.sh
     chmod +x start.sh
     ./start.sh
 fi
