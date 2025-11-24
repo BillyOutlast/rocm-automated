@@ -124,7 +124,7 @@ if [ -f "start.sh" ]; then
     ./start.sh
 else
     echo "No start.sh found, creating default startup script..."
-    echo "python main.py --listen 0.0.0.0 --port 8188 --use-quad-cross-attention" > start.sh
+    echo "python main.py --listen 0.0.0.0 --port 8188 --use-pytorch-cross-attention --force-fp16 --disable-xformers" > start.sh
     chmod +x start.sh
     ./start.sh
 fi
