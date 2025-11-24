@@ -8,9 +8,9 @@ cd comfyui-manager && pip install -r requirements.txt && cd ..
 git clone -b AMD https://github.com/crystian/ComfyUI-Crystools.git
 cd ComfyUI-Crystools && pip install -r requirements.txt && cd ..
 
-# MIGraphX
-git clone https://github.com/pnikolic-amd/ComfyUI_MIGraphX.git
-cd ComfyUI_MIGraphX && pip install -r requirements.txt && cd ..
+# MIGraphX DISABLED DUE TO CRASHES
+#git clone https://github.com/pnikolic-amd/ComfyUI_MIGraphX.git
+#cd ComfyUI_MIGraphX && pip install -r requirements.txt && cd ..
 
 # Unsafe Torch
 git clone https://github.com/ltdrdata/comfyui-unsafe-torch
