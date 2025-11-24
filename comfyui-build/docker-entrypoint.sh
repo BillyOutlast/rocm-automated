@@ -113,6 +113,14 @@ pip install -r requirements.txt
 # Set up ROCm library path
 #export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH
 
+echo "Installing ComfyUI Manager..."
+cd custom_nodes
+git clone https://github.com/ltdrdata/ComfyUI-Manager comfyui-manager
+cd comfyui-manager && pip install -r requirements.txt && cd ..
+
+#Moving back to ComfyUI root
+cd ..
+
 echo "Starting ComfyUI..."
 if [ -f "start.sh" ]; then
     echo "Found start.sh, executing it..."
