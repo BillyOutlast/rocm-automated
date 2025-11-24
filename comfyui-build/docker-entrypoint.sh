@@ -157,7 +157,13 @@ else
     echo "ComfyUI-Distributed already exists, skipping..."
 fi
 
-
+echo "Installing rocm-ninodes..."
+if [ ! -d "rocm-ninodes" ]; then
+    git clone https://github.com/iGavroche/rocm-ninodes.git rocm-ninodes
+    cd rocm-ninodes && pip install -r requirements.txt && cd ..
+else
+    echo "rocm-ninodes already exists, skipping..."
+fi
 
 echo "Custom nodes installation complete."
 
