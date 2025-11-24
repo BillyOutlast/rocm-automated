@@ -103,9 +103,12 @@ fi
 
 echo "Using PyTorch index URL: ${PYTORCH_INDEX_URL}"
 if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
-    pip install  --upgrade --pre torch torchvision torchaudio pytorch-triton-rocm --extra-index-url ${PYTORCH_INDEX_URL}
+    pip install  --upgrade --pre torch torchvision torchaudio --extra-index-url ${PYTORCH_INDEX_URL}
+    pip install  --upgrade --pre pytorch-triton-rocm --extra-index-url ${PYTORCH_INDEX_URL}
+
 else
-    pip install  --upgrade --pre torch torchvision torchaudio pytorch-triton-rocm --index-url ${PYTORCH_INDEX_URL}
+    pip install  --upgrade --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}
+    pip install  --upgrade --pre pytorch-triton-rocm --index-url ${PYTORCH_INDEX_URL}
 fi
 # TO debug flash_attn issues, temporarily disabling its installation
 #pip install --upgrade flash_attn --no-build-isolation
