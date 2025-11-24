@@ -103,7 +103,7 @@ fi
 
 echo "Using PyTorch index URL: ${PYTORCH_INDEX_URL}"
 if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
-    pip install --pre torch torchvision torchaudio--extra-index-url ${PYTORCH_INDEX_URL}
+    pip install --pre torch torchvision torchaudio --extra-index-url ${PYTORCH_INDEX_URL}
 else
     pip install --pre torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}
 fi
