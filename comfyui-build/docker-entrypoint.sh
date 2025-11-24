@@ -108,7 +108,7 @@ if echo "${PYTORCH_INDEX_URL}" | grep -q "rocm.nightlies.amd.com"; then
 else
     pip install --pre torch torchvision torchaudio pytorch-triton-rocm --index-url ${PYTORCH_INDEX_URL}
 fi
-pip install flash-attn --index-url https://pypi.org/simple
+pip install flash-attn
 echo "Installing ComfyUI requirements..."
 pip install -r requirements.txt
 
