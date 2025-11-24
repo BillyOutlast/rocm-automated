@@ -136,6 +136,9 @@ echo "Custom nodes installation complete."
 echo "Moving back to ComfyUI root"
 cd /app/ComfyUI
 
+echo "Installing additional Python packages..."
+pip install accelerate deepdiff gguf git
+
 echo "Starting ComfyUI..."
 if [ -f "start.sh" ]; then
     echo "Found start.sh, executing it..."
