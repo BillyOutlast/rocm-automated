@@ -111,6 +111,7 @@ pip install -r requirements.txt
 #pip install onnxruntime-rocm
 
 # Set up ROCm library path
+#echo "Setting up ROCm library path..."
 #export PYTHONPATH=/opt/rocm/lib:$PYTHONPATH
 
 cd custom_nodes
