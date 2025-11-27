@@ -298,6 +298,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### External GPU Enclosures
 - **AOOSTAR AG02 EGPU**: ASM246X chipset is known to have compatiblity issues with linux and may downgrade to 8 GT/s PCIe x1 (tested on Fedora 42). This may impact performance with large models requiring significant VRAM transfers.
 
+### Mini PCs
 - **Minisforum MS-A1**: Tested by Level1Techs, shown to have resizable BAR issues with eGPUs over USB4 connections. May result in reduced performance or compatibility problems with ROCm workloads.
 
 
