@@ -118,12 +118,23 @@ cd custom_nodes
 
 echo "Installing ComfyUI Manager..."
 if [ ! -d "comfyui-manager" ]; then
-    git clone https://github.com/ltdrdata/ComfyUI-Manager comfyui-manager
+    git clone https://github.com/ltdrdata/ComfyUI-Manager.git comfyui-manager
+    echo "Installing ComfyUI Manager requirements..."
     cd comfyui-manager && pip install -r requirements.txt && cd ..
 else
     echo "ComfyUI Manager already exists, skipping..."
 fi
-echo "Installing ComfyUI Manager requirements..."
+
+
+echo "Installing ComfyUI Manager..."
+if [ ! -d "ComfyUI-Easy-Use" ]; then
+    git clone https://github.com/yolain/ComfyUI-Easy-Use.git ComfyUI-Easy-Use
+    echo "Installing ComfyUI Easy Use requirements..."
+    cd ComfyUI-Easy-Use && echo "" | bash ./install.sh && cd ..
+else
+    echo "ComfyUI-Easy-Use already exists, skipping..."
+fi
+
 
 
 echo "Installing ComfyUI Multi-GPU Support..."
