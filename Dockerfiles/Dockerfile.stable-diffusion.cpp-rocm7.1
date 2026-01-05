@@ -4,7 +4,7 @@ FROM rocm/dev-ubuntu-24.04:7.1-complete AS builder
 ARG GFX_NAME=gfx1151
 
 RUN apt-get update \
-    && apt-get install -y ca-certificates libvulkan1 git \
+    && apt-get install -y ca-certificates libvulkan1 git cmake ninja-build \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
