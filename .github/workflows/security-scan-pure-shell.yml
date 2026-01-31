@@ -97,11 +97,19 @@ jobs:
         else
           echo "📦 Installing Docker..."
           
+          # Determine if we need sudo or not
+          if command -v sudo &> /dev/null && [ "$(id -u)" != "0" ]; then
+            SUDO="sudo"
+          else
+            SUDO=""
+            echo "ℹ️ Running as root or sudo not available - using direct commands"
+          fi
+          
           # Update package index
-          sudo apt-get update
+          $SUDO apt-get update -qq
           
           # Install prerequisites
-          sudo apt-get install -y \
+          $SUDO apt-get install -y -qq \
             apt-transport-https \
             ca-certificates \
             curl \
@@ -109,24 +117,32 @@ jobs:
             lsb-release
           
           # Add Docker GPG key
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
           
           # Add Docker repository
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
           
           # Install Docker
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          $SUDO apt-get update -qq
+          $SUDO apt-get install -y -qq docker-ce docker-ce-cli containerd.io
           
-          # Start Docker service
-          sudo systemctl start docker
-          sudo systemctl enable docker
+          # Start Docker service (if systemctl is available)
+          if command -v systemctl &> /dev/null; then
+            $SUDO systemctl start docker || echo "⚠️ Could not start docker service - may already be running"
+            $SUDO systemctl enable docker || echo "⚠️ Could not enable docker service"
+          else
+            echo "⚠️ systemctl not available - assuming Docker daemon is managed externally"
+          fi
           
-          # Add current user to docker group
-          sudo usermod -aG docker $USER
+          # Start dockerd manually if needed
+          if ! docker info &> /dev/null; then
+            echo "🔄 Starting Docker daemon manually..."
+            dockerd > /tmp/dockerd.log 2>&1 &
+            sleep 10
+          fi
           
           echo "✅ Docker installation completed"
-          docker --version
+          docker --version || echo "⚠️ Docker version check failed"
         fi
       shell: bash
       
