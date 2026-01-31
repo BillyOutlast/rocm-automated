@@ -152,9 +152,51 @@ jobs:
         
         # Ensure Docker daemon is running
         if ! docker info &> /dev/null; then
-          echo "🔄 Starting Docker daemon..."
-          sudo systemctl start docker
-          sleep 5
+          echo "🔄 Docker daemon not running - attempting to start..."
+          
+          # Try systemctl first (if available)
+          if command -v systemctl &> /dev/null; then
+            if systemctl is-active --quiet docker; then
+              echo "✅ Docker service is already active"
+            else
+              echo "🔄 Starting Docker service with systemctl..."
+              systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - trying manual start"
+            fi
+          else
+            echo "ℹ️ systemctl not available - using manual Docker daemon start"
+          fi
+          
+          # If systemctl failed or isn't available, try manual start
+          if ! docker info &> /dev/null; then
+            echo "🔄 Starting Docker daemon manually..."
+            
+            # Kill any existing dockerd processes
+            pkill dockerd 2>/dev/null || true
+            
+            # Start dockerd in background
+            dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 > /tmp/dockerd-security.log 2>&1 &
+            
+            # Wait for Docker daemon to start
+            echo "⏳ Waiting for Docker daemon to start..."
+            for i in {1..30}; do
+              if docker info &> /dev/null; then
+                echo "✅ Docker daemon is now running"
+                break
+              fi
+              echo "  Attempt $i/30..."
+              sleep 2
+            done
+            
+            # Final check
+            if ! docker info &> /dev/null; then
+              echo "❌ Failed to start Docker daemon"
+              echo "Docker daemon log:"
+              tail -20 /tmp/dockerd-security.log || echo "No log available"
+              exit 1
+            fi
+          fi
+        else
+          echo "✅ Docker daemon is already running"
         fi
         
         # Check if buildx is available
@@ -168,11 +210,19 @@ jobs:
         else
           echo "✅ Docker Buildx is already available"
         fi
-        fi
         
         # Create and use builder instance
-        docker buildx create --name security-builder --use --bootstrap || echo "Builder already exists"
-        docker buildx inspect --bootstrap
+        echo "🏗️ Setting up Buildx builder for security scan..."
+        docker buildx create --name security-builder --use --bootstrap 2>/dev/null || {
+          echo "ℹ️ Builder creation failed - trying to use existing or default builder"
+          docker buildx use default 2>/dev/null || docker buildx use security-builder 2>/dev/null || echo "⚠️ Using default builder context"
+        }
+        
+        # Verify buildx is working
+        docker buildx inspect --bootstrap || echo "⚠️ Buildx inspect failed but continuing"
+        docker buildx ls
+        
+        echo "✅ Docker Buildx setup completed for security scan"
       shell: bash
         
     - name: Build test image
