@@ -100,44 +100,76 @@ jobs:
             echo "ℹ️ Running as root or sudo not available - using direct commands"
           fi
           
-          # Update package index
-          $SUDO apt-get update -qq
-          
-          # Install prerequisites
-          $SUDO apt-get install -y -qq \
-            apt-transport-https \
-            ca-certificates \
-            curl \
-            gnupg \
-            lsb-release
-          
-          # Add Docker GPG key
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-          
-          # Add Docker repository
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
-          
-          # Install Docker
-          $SUDO apt-get update -qq
-          $SUDO apt-get install -y -qq docker-ce docker-ce-cli containerd.io
+          # Detect package manager and install Docker accordingly
+          if command -v apt-get &> /dev/null; then
+            echo "📱 Using apt-get (Debian/Ubuntu)..."
+            
+            # Update package index
+            $SUDO apt-get update -qq
+            
+            # Install prerequisites
+            $SUDO apt-get install -y -qq \
+              apt-transport-https \
+              ca-certificates \
+              curl \
+              gnupg \
+              lsb-release
+            
+            # Add Docker GPG key
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            
+            # Add Docker repository
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
+            # Install Docker
+            $SUDO apt-get update -qq
+            $SUDO apt-get install -y -qq docker-ce docker-ce-cli containerd.io
+            
+          elif command -v yum &> /dev/null; then
+            echo "📱 Using yum (RHEL/CentOS/Fedora)..."
+            
+            # Install Docker from official repo
+            $SUDO yum install -y yum-utils
+            $SUDO yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+            $SUDO yum install -y docker-ce docker-ce-cli containerd.io
+            
+          elif command -v apk &> /dev/null; then
+            echo "📱 Using apk (Alpine Linux)..."
+            
+            # Update package index
+            $SUDO apk update
+            
+            # Install Docker
+            $SUDO apk add docker docker-compose
+            
+          else
+            echo "⚠️ No supported package manager found - trying binary installation..."
+            
+            # Install Docker from binary
+            DOCKER_VERSION="24.0.7"
+            echo "📦 Downloading Docker ${DOCKER_VERSION} binaries..."
+            
+            # Download and install Docker binaries
+            curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz | tar xz
+            $SUDO mv docker/* /usr/local/bin/
+            rm -rf docker
+            
+            # Create docker group
+            $SUDO groupadd docker 2>/dev/null || true
+            
+            echo "✅ Docker binaries installed"
+          fi
           
           # Start Docker service (if systemctl is available)
           if command -v systemctl &> /dev/null; then
-            $SUDO systemctl start docker || echo "⚠️ Could not start docker service - may already be running"
-            $SUDO systemctl enable docker || echo "⚠️ Could not enable docker service"
+            $SUDO systemctl start docker 2>/dev/null || echo "⚠️ Could not start docker service - may already be running"
+            $SUDO systemctl enable docker 2>/dev/null || echo "⚠️ Could not enable docker service"
           else
-            echo "⚠️ systemctl not available - assuming Docker daemon is managed externally"
-          fi
-          
-          # Start dockerd manually if needed
-          if ! docker info &> /dev/null; then
-            echo "🔄 Starting Docker daemon manually..."
-            dockerd > /tmp/dockerd.log 2>&1 &
-            sleep 10
+            echo "ℹ️ systemctl not available - Docker daemon will be started manually if needed"
           fi
           
           echo "✅ Docker installation completed"
-          docker --version || echo "⚠️ Docker version check failed"
+          docker --version 2>/dev/null || echo "⚠️ Docker version check failed - daemon may need to be started manually"
         fi
       shell: bash
       
@@ -311,40 +343,72 @@ jobs:
             echo "ℹ️ Running as root or sudo not available - using direct commands"
           fi
           
-          # Update package index
-          $SUDO apt-get update -qq
-          
-          # Install prerequisites
-          $SUDO apt-get install -y -qq \
-            apt-transport-https \
-            ca-certificates \
-            curl \
-            gnupg \
-            lsb-release
-          
-          # Add Docker GPG key
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-          
-          # Add Docker repository
-          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
-          
-          # Install Docker
-          $SUDO apt-get update -qq
-          $SUDO apt-get install -y -qq docker-ce docker-ce-cli containerd.io
+          # Detect package manager and install Docker accordingly
+          if command -v apt-get &> /dev/null; then
+            echo "📱 Using apt-get (Debian/Ubuntu)..."
+            
+            # Update package index
+            $SUDO apt-get update -qq
+            
+            # Install prerequisites
+            $SUDO apt-get install -y -qq \
+              apt-transport-https \
+              ca-certificates \
+              curl \
+              gnupg \
+              lsb-release
+            
+            # Add Docker GPG key
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+            
+            # Add Docker repository
+            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
+            
+            # Install Docker
+            $SUDO apt-get update -qq
+            $SUDO apt-get install -y -qq docker-ce docker-ce-cli containerd.io
+            
+          elif command -v yum &> /dev/null; then
+            echo "📱 Using yum (RHEL/CentOS/Fedora)..."
+            
+            # Install Docker from official repo
+            $SUDO yum install -y yum-utils
+            $SUDO yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+            $SUDO yum install -y docker-ce docker-ce-cli containerd.io
+            
+          elif command -v apk &> /dev/null; then
+            echo "📱 Using apk (Alpine Linux)..."
+            
+            # Update package index
+            $SUDO apk update
+            
+            # Install Docker
+            $SUDO apk add docker docker-compose
+            
+          else
+            echo "⚠️ No supported package manager found - trying binary installation..."
+            
+            # Install Docker from binary
+            DOCKER_VERSION="24.0.7"
+            echo "📦 Downloading Docker ${DOCKER_VERSION} binaries..."
+            
+            # Download and install Docker binaries
+            curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz | tar xz
+            $SUDO mv docker/* /usr/local/bin/
+            rm -rf docker
+            
+            # Create docker group
+            $SUDO groupadd docker 2>/dev/null || true
+            
+            echo "✅ Docker binaries installed"
+          fi
           
           # Start Docker service (if systemctl is available)
           if command -v systemctl &> /dev/null; then
-            $SUDO systemctl start docker || echo "⚠️ Could not start docker service - may already be running"
-            $SUDO systemctl enable docker || echo "⚠️ Could not enable docker service"
+            $SUDO systemctl start docker 2>/dev/null || echo "⚠️ Could not start docker service - may already be running"
+            $SUDO systemctl enable docker 2>/dev/null || echo "⚠️ Could not enable docker service"
           else
-            echo "⚠️ systemctl not available - assuming Docker daemon is managed externally"
-          fi
-          
-          # Start dockerd manually if needed
-          if ! docker info &> /dev/null; then
-            echo "🔄 Starting Docker daemon manually..."
-            dockerd > /tmp/dockerd.log 2>&1 &
-            sleep 10
+            echo "ℹ️ systemctl not available - Docker daemon will be started manually if needed"
           fi
           
           echo "✅ Docker installation completed"
