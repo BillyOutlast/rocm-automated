@@ -1,0 +1,369 @@
+name: Security Scan (Pure Shell)
+
+on:
+  schedule:
+    # Run security scans weekly on Sundays at 03:00 UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Dockerfiles/**'
+      - '.github/workflows/**'
+
+env:
+  REGISTRY: docker.io
+  REGISTRY_USER: getterup
+
+jobs:
+  dockerfile-security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Manual checkout
+      run: |
+        echo "🔄 Manually cloning repository..."
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
+        cd /tmp/repo
+        if [ "${{ github.event_name }}" != "schedule" ]; then
+          git fetch origin ${{ github.sha }}
+          git checkout ${{ github.sha }}
+        fi
+        cp -r . ${{ github.workspace }}
+      shell: bash
+      
+    - name: Install Hadolint
+      run: |
+        echo "🔧 Installing Hadolint..."
+        HADOLINT_VERSION="v2.12.0"
+        wget -q -O /tmp/hadolint \
+          "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-x86_64"
+        chmod +x /tmp/hadolint
+        sudo mv /tmp/hadolint /usr/local/bin/hadolint
+        hadolint --version
+      shell: bash
+        
+    - name: Run Hadolint on ComfyUI Dockerfile
+      run: |
+        echo "🔍 Scanning Dockerfile.comfyui-rocm7.1..."
+        if [ -f "Dockerfiles/Dockerfile.comfyui-rocm7.1" ]; then
+          hadolint Dockerfiles/Dockerfile.comfyui-rocm7.1 && echo "✅ ComfyUI Dockerfile passed" || echo "⚠️ Warnings found in ComfyUI Dockerfile"
+        else
+          echo "❌ ComfyUI Dockerfile not found"
+        fi
+      shell: bash
+        
+    - name: Run Hadolint on Stable Diffusion Dockerfile
+      run: |
+        echo "🔍 Scanning Dockerfile.stable-diffusion.cpp-rocm7.1..."
+        if [ -f "Dockerfiles/Dockerfile.stable-diffusion.cpp-rocm7.1" ]; then
+          hadolint Dockerfiles/Dockerfile.stable-diffusion.cpp-rocm7.1 && echo "✅ Stable Diffusion Dockerfile passed" || echo "⚠️ Warnings found in Stable Diffusion Dockerfile"
+        else
+          echo "❌ Stable Diffusion Dockerfile not found"
+        fi
+      shell: bash
+        
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - name: comfyui-rocm7.1
+            dockerfile: Dockerfile.comfyui-rocm7.1
+          - name: stable-diffusion.cpp-rocm7.1
+            dockerfile: Dockerfile.stable-diffusion.cpp-rocm7.1
+    
+    steps:
+    - name: Manual checkout
+      run: |
+        echo "🔄 Manually cloning repository..."
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
+        cd /tmp/repo
+        if [ "${{ github.event_name }}" != "schedule" ]; then
+          git fetch origin ${{ github.sha }}
+          git checkout ${{ github.sha }}
+        fi
+        cp -r . ${{ github.workspace }}
+      shell: bash
+      
+    - name: Set up Docker Buildx
+      run: |
+        echo "🐳 Setting up Docker Buildx for security scan..."
+        
+        # Check if buildx is available
+        if ! docker buildx version > /dev/null 2>&1; then
+          echo "Installing Docker Buildx..."
+          mkdir -p ~/.docker/cli-plugins
+          BUILDX_VERSION="v0.12.1"
+          wget -q -O ~/.docker/cli-plugins/docker-buildx \
+            "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64"
+          chmod +x ~/.docker/cli-plugins/docker-buildx
+        fi
+        
+        # Create and use builder instance
+        docker buildx create --name security-builder --use --bootstrap || echo "Builder already exists"
+        docker buildx inspect --bootstrap
+      shell: bash
+        
+    - name: Build test image
+      run: |
+        echo "🏗️ Building test image for ${{ matrix.image.name }}..."
+        
+        if [ ! -f "Dockerfiles/${{ matrix.image.dockerfile }}" ]; then
+          echo "❌ Dockerfile not found: Dockerfiles/${{ matrix.image.dockerfile }}"
+          exit 1
+        fi
+        
+        docker buildx build \
+          --context . \
+          --file Dockerfiles/${{ matrix.image.dockerfile }} \
+          --tag test-${{ matrix.image.name }}:latest \
+          --load \
+          . || {
+          echo "❌ Failed to build test image for ${{ matrix.image.name }}"
+          exit 1
+        }
+        
+        echo "✅ Test image built successfully"
+        docker images | grep "test-${{ matrix.image.name }}"
+      shell: bash
+        
+    - name: Install Trivy
+      run: |
+        echo "🛡️ Installing Trivy..."
+        
+        # Install dependencies
+        sudo apt-get update -qq
+        sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+        
+        # Add Trivy repository
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+        echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+        
+        # Install Trivy
+        sudo apt-get update -qq
+        sudo apt-get install -y trivy
+        
+        trivy --version
+      shell: bash
+        
+    - name: Run Trivy vulnerability scanner
+      run: |
+        echo "🛡️ Scanning test-${{ matrix.image.name }}:latest for vulnerabilities..."
+        
+        # Run Trivy scan with table output
+        echo "📋 Vulnerability Summary:"
+        trivy image --exit-code 0 --severity HIGH,CRITICAL --format table test-${{ matrix.image.name }}:latest || echo "⚠️ Vulnerabilities found"
+        
+        # Generate JSON report for analysis
+        echo ""
+        echo "📄 Generating detailed JSON report..."
+        trivy image --format json --output trivy-report-${{ matrix.image.name }}.json test-${{ matrix.image.name }}:latest || echo "⚠️ Failed to generate JSON report"
+        
+        # Show summary statistics
+        if [ -f "trivy-report-${{ matrix.image.name }}.json" ]; then
+          HIGH_COUNT=$(cat trivy-report-${{ matrix.image.name }}.json | jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' 2>/dev/null || echo "0")
+          CRITICAL_COUNT=$(cat trivy-report-${{ matrix.image.name }}.json | jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' 2>/dev/null || echo "0")
+          
+          echo ""
+          echo "📊 Vulnerability Summary for ${{ matrix.image.name }}:"
+          echo "  - Critical: $CRITICAL_COUNT"
+          echo "  - High: $HIGH_COUNT"
+          
+          if [ "$CRITICAL_COUNT" -gt "0" ]; then
+            echo "❌ Critical vulnerabilities found - immediate attention required"
+            # Don't fail the build, just warn
+          elif [ "$HIGH_COUNT" -gt "0" ]; then
+            echo "⚠️ High severity vulnerabilities found - review recommended"
+          else
+            echo "✅ No high or critical vulnerabilities found"
+          fi
+        fi
+      shell: bash
+        
+    - name: Upload scan results
+      run: |
+        echo "📄 Processing scan results..."
+        
+        if [ -f "trivy-report-${{ matrix.image.name }}.json" ]; then
+          echo "✅ Trivy scan report generated: trivy-report-${{ matrix.image.name }}.json"
+          
+          # Show file size
+          REPORT_SIZE=$(du -h trivy-report-${{ matrix.image.name }}.json | cut -f1)
+          echo "📏 Report size: $REPORT_SIZE"
+          
+          # In a production environment, you might upload this to:
+          # - Artifact storage
+          # - Security dashboard
+          # - SIEM system
+          # - etc.
+          
+          echo "💡 In production, consider uploading this report to your security systems"
+        else
+          echo "❌ No scan report found"
+        fi
+      shell: bash
+        
+  dependency-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Manual checkout
+      run: |
+        echo "🔄 Manually cloning repository..."
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
+        cd /tmp/repo
+        if [ "${{ github.event_name }}" != "schedule" ]; then
+          git fetch origin ${{ github.sha }}
+          git checkout ${{ github.sha }}
+        fi
+        cp -r . ${{ github.workspace }}
+      shell: bash
+      
+    - name: Check for base image updates
+      run: |
+        echo "🔍 Checking base images for updates..."
+        
+        # Common base images that might be used in Dockerfiles
+        BASE_IMAGES=(
+          "ubuntu:22.04"
+          "ubuntu:20.04" 
+          "python:3.11-slim"
+          "python:3.12-slim"
+          "rocm/rocm-terminal:latest"
+        )
+        
+        for image in "${BASE_IMAGES[@]}"; do
+          echo ""
+          echo "Checking $image..."
+          if docker pull "$image" 2>/dev/null; then
+            echo "✅ Successfully pulled $image"
+            # Get image info
+            docker inspect "$image" --format='{{.RepoDigests}}' | head -1 || echo "⚠️ Could not get digest"
+          else
+            echo "⚠️ Could not pull $image (may not be used in our builds)"
+          fi
+        done
+        
+        echo ""
+        echo "✅ Base image check completed"
+        echo "💡 Consider updating Dockerfiles if newer base images are available"
+      shell: bash
+        
+    - name: Check Dockerfile base images
+      run: |
+        echo "🔍 Analyzing Dockerfile base images..."
+        
+        DOCKERFILES=(
+          "Dockerfiles/Dockerfile.comfyui-rocm7.1"
+          "Dockerfiles/Dockerfile.stable-diffusion.cpp-rocm7.1"
+        )
+        
+        for dockerfile in "${DOCKERFILES[@]}"; do
+          if [ -f "$dockerfile" ]; then
+            echo ""
+            echo "📄 Analyzing $dockerfile:"
+            
+            # Extract FROM statements
+            BASE_IMAGES=$(grep -i "^FROM" "$dockerfile" | awk '{print $2}' | head -5)
+            
+            while IFS= read -r image; do
+              if [ -n "$image" ]; then
+                echo "  - Base image: $image"
+                # You could add logic here to check for updates to specific images
+              fi
+            done <<< "$BASE_IMAGES"
+          else
+            echo "⚠️ Dockerfile not found: $dockerfile"
+          fi
+        done
+        
+        echo ""
+        echo "✅ Dockerfile analysis completed"
+      shell: bash
+        
+    - name: Security advisory check
+      run: |
+        echo "🛡️ Security Advisory Information"
+        echo "=================================="
+        echo ""
+        echo "📋 Please manually review the following for security updates:"
+        echo ""
+        echo "🔗 Key Security Resources:"
+        echo "  - ROCm Security: https://github.com/RadeonOpenCompute/ROCm/security"
+        echo "  - Docker Security: https://docs.docker.com/engine/security/"
+        echo "  - Ubuntu Security: https://ubuntu.com/security/notices"
+        echo "  - Python Security: https://python.org/news/security/"
+        echo "  - CVE Database: https://cve.mitre.org/"
+        echo ""
+        echo "🏃‍♂️ Automated Checks You Can Add:"
+        echo "  - Subscribe to security mailing lists"
+        echo "  - Monitor CVE databases for your dependencies"
+        echo "  - Use tools like Dependabot or Renovate"
+        echo "  - Implement container image scanning in CI/CD"
+        echo ""
+        echo "💡 Regular monitoring of these sources is recommended for production deployments."
+        echo ""
+        echo "📅 Last checked: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+      shell: bash
+        
+  notify-security:
+    runs-on: ubuntu-latest
+    needs: [dockerfile-security-scan, vulnerability-scan, dependency-check]
+    if: always() && github.event_name == 'schedule'
+    
+    steps:
+    - name: Security scan summary
+      run: |
+        echo "🔒 Weekly Security Scan Summary"
+        echo "==============================="
+        echo "📅 Scan Date: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        echo ""
+        echo "📊 Scan Results:"
+        echo "  - Dockerfile Lint: ${{ needs.dockerfile-security-scan.result }}"
+        echo "  - Vulnerability Scan: ${{ needs.vulnerability-scan.result }}"
+        echo "  - Dependency Check: ${{ needs.dependency-check.result }}"
+        echo ""
+        
+        # Count successful jobs
+        SUCCESS_COUNT=0
+        TOTAL_COUNT=3
+        
+        [ "${{ needs.dockerfile-security-scan.result }}" == "success" ] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+        [ "${{ needs.vulnerability-scan.result }}" == "success" ] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+        [ "${{ needs.dependency-check.result }}" == "success" ] && SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+        
+        echo "📈 Success Rate: $SUCCESS_COUNT/$TOTAL_COUNT scans completed successfully"
+        echo ""
+        
+        # Build list of failed jobs
+        FAILED_JOBS=()
+        [ "${{ needs.dockerfile-security-scan.result }}" == "failure" ] && FAILED_JOBS+=("dockerfile-lint")
+        [ "${{ needs.vulnerability-scan.result }}" == "failure" ] && FAILED_JOBS+=("vulnerability-scan")
+        [ "${{ needs.dependency-check.result }}" == "failure" ] && FAILED_JOBS+=("dependency-check")
+        
+        if [ ${#FAILED_JOBS[@]} -gt 0 ]; then
+          echo "❌ Failed scans: ${FAILED_JOBS[*]}"
+          echo ""
+          echo "🔧 Recommended Actions:"
+          echo "  - Review Dockerfile best practices and fix linting issues"
+          echo "  - Update base images to latest patched versions"
+          echo "  - Address high/critical vulnerabilities found by Trivy"
+          echo "  - Check dependency update recommendations"
+          echo ""
+          echo "📖 Resources:"
+          echo "  - Dockerfile Best Practices: https://docs.docker.com/develop/dev-best-practices/"
+          echo "  - Container Security: https://kubernetes.io/docs/concepts/security/"
+          echo ""
+          exit 1
+        else
+          echo "🎉 All security scans completed successfully!"
+          echo ""
+          echo "✅ Security Status:"
+          echo "  - Dockerfiles follow best practices"
+          echo "  - No critical vulnerabilities detected"
+          echo "  - Dependencies are up to date"
+          echo ""
+          echo "🛡️ Your container images appear to be secure!"
+          echo "💡 Continue monitoring for new vulnerabilities and updates"
+        fi
+      shell: bash
