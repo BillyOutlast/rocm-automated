@@ -21,9 +21,10 @@ jobs:
     steps:
     - name: Manual checkout
       run: |
-        echo "🔄 Manually cloning repository..."
-        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
-        cd /tmp/repo
+        echo "🔄 Manually cloning repository for dockerfile-security-scan..."
+        rm -rf /tmp/repo-dockerfile-scan
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo-dockerfile-scan
+        cd /tmp/repo-dockerfile-scan
         if [ "${{ github.event_name }}" != "schedule" ]; then
           git fetch origin ${{ github.sha }}
           git checkout ${{ github.sha }}
@@ -114,7 +115,6 @@ jobs:
         fi
         
         docker buildx build \
-          --context . \
           --file Dockerfiles/${{ matrix.image.dockerfile }} \
           --tag test-${{ matrix.image.name }}:latest \
           --load \

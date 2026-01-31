@@ -31,9 +31,10 @@ jobs:
     steps:
     - name: Manual checkout
       run: |
-        echo "🔄 Manually cloning repository..."
-        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
-        cd /tmp/repo
+        echo "🔄 Manually cloning repository for prepare job..."
+        rm -rf /tmp/repo-prepare
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo-prepare
+        cd /tmp/repo-prepare
         if [ "${{ github.event_name }}" != "schedule" ]; then
           git fetch origin ${{ github.sha }}
           git checkout ${{ github.sha }}
@@ -69,9 +70,10 @@ jobs:
     steps:
     - name: Manual checkout
       run: |
-        echo "🔄 Manually cloning repository..."
-        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
-        cd /tmp/repo
+        echo "🔄 Manually cloning repository for build-base-images job..."
+        rm -rf /tmp/repo-build-base
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo-build-base
+        cd /tmp/repo-build-base
         if [ "${{ github.event_name }}" != "schedule" ]; then
           git fetch origin ${{ github.sha }}
           git checkout ${{ github.sha }}
@@ -127,13 +129,12 @@ jobs:
         fi
         
         docker buildx build \
-          --context ${{ matrix.image.context }} \
           --file Dockerfiles/${{ matrix.image.dockerfile }} \
           --platform linux/amd64 \
           $BUILD_ARGS \
           $(for tag in $TAGS; do echo "--tag $tag"; done) \
           $PUSH_FLAG \
-          .
+          ${{ matrix.image.context }}
           
         echo "✅ Build completed for ${{ matrix.image.name }}"
       shell: bash
@@ -156,9 +157,10 @@ jobs:
     steps:
     - name: Manual checkout
       run: |
-        echo "🔄 Manually cloning repository..."
-        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
-        cd /tmp/repo
+        echo "🔄 Manually cloning repository for GPU variants job..."
+        rm -rf /tmp/repo-gpu-variants
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo-gpu-variants
+        cd /tmp/repo-gpu-variants
         if [ "${{ github.event_name }}" != "schedule" ]; then
           git fetch origin ${{ github.sha }}
           git checkout ${{ github.sha }}
@@ -215,7 +217,6 @@ jobs:
         fi
         
         docker buildx build \
-          --context . \
           --file Dockerfiles/Dockerfile.stable-diffusion.cpp-rocm7.1 \
           --platform linux/amd64 \
           $BUILD_ARGS \
@@ -234,9 +235,10 @@ jobs:
     steps:
     - name: Manual checkout
       run: |
-        echo "🔄 Manually cloning repository..."
-        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo
-        cd /tmp/repo
+        echo "🔄 Manually cloning repository for test-compose job..."
+        rm -rf /tmp/repo-test-compose
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo-test-compose
+        cd /tmp/repo-test-compose
         if [ "${{ github.event_name }}" != "schedule" ]; then
           git fetch origin ${{ github.sha }}
           git checkout ${{ github.sha }}
