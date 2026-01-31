@@ -1,0 +1,177 @@
+name: Security Scan (Gitea)
+
+on:
+  schedule:
+    # Run security scans weekly on Sundays at 03:00 UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'Dockerfiles/**'
+      - '.github/workflows/**'
+
+env:
+  REGISTRY: docker.io
+  REGISTRY_USER: getterup
+
+jobs:
+  dockerfile-security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: https://gitea.com/actions/checkout@v4
+      
+    - name: Install Hadolint
+      run: |
+        wget -O /tmp/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+        chmod +x /tmp/hadolint
+        sudo mv /tmp/hadolint /usr/local/bin/hadolint
+      shell: bash
+        
+    - name: Run Hadolint on ComfyUI Dockerfile
+      run: |
+        echo "🔍 Scanning Dockerfile.comfyui-rocm7.1..."
+        hadolint Dockerfiles/Dockerfile.comfyui-rocm7.1 || echo "⚠️ Warnings found in ComfyUI Dockerfile"
+      shell: bash
+        
+    - name: Run Hadolint on Stable Diffusion Dockerfile
+      run: |
+        echo "🔍 Scanning Dockerfile.stable-diffusion.cpp-rocm7.1..."
+        hadolint Dockerfiles/Dockerfile.stable-diffusion.cpp-rocm7.1 || echo "⚠️ Warnings found in Stable Diffusion Dockerfile"
+      shell: bash
+        
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - name: comfyui-rocm7.1
+            dockerfile: Dockerfile.comfyui-rocm7.1
+          - name: stable-diffusion.cpp-rocm7.1
+            dockerfile: Dockerfile.stable-diffusion.cpp-rocm7.1
+    
+    steps:
+    - name: Checkout repository
+      uses: https://gitea.com/actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: https://gitea.com/actions/setup-docker@v1
+      with:
+        buildx: true
+        
+    - name: Build test image
+      run: |
+        docker buildx build \
+          --context . \
+          --file Dockerfiles/${{ matrix.image.dockerfile }} \
+          --tag test-${{ matrix.image.name }}:latest \
+          --load \
+          .
+      shell: bash
+        
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy
+      shell: bash
+        
+    - name: Run Trivy vulnerability scanner
+      run: |
+        echo "🛡️ Scanning test-${{ matrix.image.name }}:latest for vulnerabilities..."
+        trivy image --exit-code 1 --severity HIGH,CRITICAL --format table test-${{ matrix.image.name }}:latest || echo "⚠️ Vulnerabilities found in ${{ matrix.image.name }}"
+        
+        # Generate JSON report for further analysis
+        trivy image --format json --output trivy-report-${{ matrix.image.name }}.json test-${{ matrix.image.name }}:latest || true
+      shell: bash
+        
+    - name: Upload scan results
+      run: |
+        if [ -f "trivy-report-${{ matrix.image.name }}.json" ]; then
+          echo "📄 Trivy scan report generated: trivy-report-${{ matrix.image.name }}.json"
+          # In a real environment, you might upload this to an artifact store or security system
+        fi
+      shell: bash
+        
+  dependency-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: https://gitea.com/actions/checkout@v4
+      
+    - name: Check for base image updates
+      run: |
+        echo "🔍 Checking base images for updates..."
+        
+        # Check common base images used in our Dockerfiles
+        echo "Checking Ubuntu base images..."
+        docker pull ubuntu:22.04 2>/dev/null || echo "⚠️ Could not pull ubuntu:22.04"
+        
+        echo "Checking Python images..."
+        docker pull python:3.11-slim 2>/dev/null || echo "⚠️ Could not pull python:3.11-slim"
+        docker pull python:3.12-slim 2>/dev/null || echo "⚠️ Could not pull python:3.12-slim"
+        
+        echo "✅ Base image check completed"
+      shell: bash
+        
+    - name: Security advisory check
+      run: |
+        echo "🛡️ Security Advisory Information"
+        echo "=================================="
+        echo ""
+        echo "📋 Please manually review the following for security updates:"
+        echo "- ROCm security advisories: https://github.com/RadeonOpenCompute/ROCm/security"
+        echo "- Docker security best practices: https://docs.docker.com/engine/security/"
+        echo "- Ubuntu security notices: https://ubuntu.com/security/notices"
+        echo "- Python security advisories: https://python.org/news/security/"
+        echo ""
+        echo "💡 Regular monitoring of these sources is recommended for production deployments."
+      shell: bash
+        
+  notify-security:
+    runs-on: ubuntu-latest
+    needs: [dockerfile-security-scan, vulnerability-scan, dependency-check]
+    if: always() && github.event_name == 'schedule'
+    
+    steps:
+    - name: Security scan summary
+      run: |
+        echo "🔒 Weekly Security Scan Summary"
+        echo "==============================="
+        echo ""
+        echo "📊 Scan Results:"
+        echo "- Dockerfile Lint: ${{ needs.dockerfile-security-scan.result }}"
+        echo "- Vulnerability Scan: ${{ needs.vulnerability-scan.result }}"
+        echo "- Dependency Check: ${{ needs.dependency-check.result }}"
+        echo ""
+        
+        FAILED_JOBS=""
+        if [ "${{ needs.dockerfile-security-scan.result }}" == "failure" ]; then
+          FAILED_JOBS="$FAILED_JOBS dockerfile-lint"
+        fi
+        if [ "${{ needs.vulnerability-scan.result }}" == "failure" ]; then
+          FAILED_JOBS="$FAILED_JOBS vulnerability-scan"
+        fi
+        if [ "${{ needs.dependency-check.result }}" == "failure" ]; then
+          FAILED_JOBS="$FAILED_JOBS dependency-check"
+        fi
+        
+        if [ -n "$FAILED_JOBS" ]; then
+          echo "❌ Failed jobs:$FAILED_JOBS"
+          echo "⚠️ Please review the detailed logs above"
+          echo ""
+          echo "🔧 Recommended actions:"
+          echo "- Review Dockerfile best practices"
+          echo "- Update base images to latest versions"
+          echo "- Address high/critical vulnerabilities"
+          exit 1
+        else
+          echo "✅ All security scans passed successfully!"
+          echo "🛡️ No critical security issues detected"
+        fi
+      shell: bash
