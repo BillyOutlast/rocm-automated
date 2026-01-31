@@ -4,6 +4,10 @@
 [![Docker](https://img.shields.io/badge/Docker-supported-blue.svg)](https://www.docker.com/)
 [![AMD GPU](https://img.shields.io/badge/AMD-GPU-green.svg)](https://www.amd.com/en/graphics)
 
+[![Daily Build](https://github.com/yourusername/rocm-automated/actions/workflows/daily-build.yml/badge.svg)](https://github.com/yourusername/rocm-automated/actions/workflows/daily-build.yml)
+[![Security Scan](https://github.com/yourusername/rocm-automated/actions/workflows/security-scan.yml/badge.svg)](https://github.com/yourusername/rocm-automated/actions/workflows/security-scan.yml)
+[![Release](https://github.com/yourusername/rocm-automated/actions/workflows/release.yml/badge.svg)](https://github.com/yourusername/rocm-automated/actions/workflows/release.yml)
+
 A comprehensive Docker-based environment for running AI workloads on AMD GPUs with ROCm 7.1 support. This project provides optimized containers for Ollama LLM inference and Stable Diffusion image generation.
 
 Sponsored by https://shad-base.com
