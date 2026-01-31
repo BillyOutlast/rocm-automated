@@ -192,40 +192,28 @@ jobs:
               echo "✅ Docker service is already active"
             else
               echo "🔄 Starting Docker service with systemctl..."
-              systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - trying manual start"
+              if command -v sudo &> /dev/null && [ "$(id -u)" != "0" ]; then
+                sudo systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - may need manual start"
+              else
+                systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - may need manual start"
+              fi
             fi
           else
-            echo "ℹ️ systemctl not available - using manual Docker daemon start"
+            echo "ℹ️ systemctl not available"
           fi
           
-          # If systemctl failed or isn't available, try manual start
+          # Wait a moment for the daemon to start
+          sleep 3
+          
+          # Final check - if still not running, we have an issue
           if ! docker info &> /dev/null; then
-            echo "🔄 Starting Docker daemon manually..."
-            
-            # Kill any existing dockerd processes
-            pkill dockerd 2>/dev/null || true
-            
-            # Start dockerd in background
-            dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 > /tmp/dockerd-security.log 2>&1 &
-            
-            # Wait for Docker daemon to start
-            echo "⏳ Waiting for Docker daemon to start..."
-            for i in {1..30}; do
-              if docker info &> /dev/null; then
-                echo "✅ Docker daemon is now running"
-                break
-              fi
-              echo "  Attempt $i/30..."
-              sleep 2
-            done
-            
-            # Final check
-            if ! docker info &> /dev/null; then
-              echo "❌ Failed to start Docker daemon"
-              echo "Docker daemon log:"
-              tail -20 /tmp/dockerd-security.log || echo "No log available"
-              exit 1
-            fi
+            echo "❌ Docker daemon is not running and couldn't be started"
+            echo "Debugging information:"
+            echo "- Docker binary: $(command -v docker || echo 'NOT FOUND')"
+            echo "- Docker version: $(docker --version || echo 'FAILED')"
+            echo "- System info: $(uname -a)"
+            echo "- Available services: $(systemctl list-units --type=service | grep docker || echo 'No docker services found')"
+            exit 1
           fi
         else
           echo "✅ Docker daemon is already running"

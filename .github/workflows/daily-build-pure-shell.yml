@@ -100,82 +100,143 @@ jobs:
             echo "ℹ️ Running as root or sudo not available - using direct commands"
           fi
           
+          DOCKER_INSTALLED=false
+          
           # Detect package manager and install Docker accordingly
           if command -v apt-get &> /dev/null; then
             echo "📱 Using apt-get (Debian/Ubuntu)..."
             
             # Update package index
-            $SUDO apt-get update -qq
+            if $SUDO apt-get update -qq; then
+              echo "✅ Package index updated"
+            else
+              echo "⚠️ Failed to update package index"
+            fi
             
             # Install prerequisites
-            $SUDO apt-get install -y -qq \
+            if $SUDO apt-get install -y -qq \
               apt-transport-https \
               ca-certificates \
               curl \
               gnupg \
-              lsb-release
-            
-            # Add Docker GPG key
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-            
-            # Add Docker repository
-            echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
-            
-            # Install Docker
-            $SUDO apt-get update -qq
-            $SUDO apt-get install -y -qq docker-ce docker-ce-cli containerd.io
+              lsb-release; then
+              
+              # Add Docker GPG key and repo
+              if curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg; then
+                echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | $SUDO tee /etc/apt/sources.list.d/docker.list > /dev/null
+                
+                # Install Docker
+                if $SUDO apt-get update -qq && $SUDO apt-get install -y -qq docker-ce docker-ce-cli containerd.io; then
+                  DOCKER_INSTALLED=true
+                  echo "✅ Docker installed via apt-get"
+                else
+                  echo "⚠️ Docker installation via apt-get failed"
+                fi
+              else
+                echo "⚠️ Failed to add Docker GPG key"
+              fi
+            else
+              echo "⚠️ Failed to install prerequisites"
+            fi
             
           elif command -v yum &> /dev/null; then
             echo "📱 Using yum (RHEL/CentOS/Fedora)..."
             
             # Install Docker from official repo
-            $SUDO yum install -y yum-utils
-            $SUDO yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-            $SUDO yum install -y docker-ce docker-ce-cli containerd.io
+            if $SUDO yum install -y yum-utils && \
+               $SUDO yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
+               $SUDO yum install -y docker-ce docker-ce-cli containerd.io; then
+              DOCKER_INSTALLED=true
+              echo "✅ Docker installed via yum"
+            else
+              echo "⚠️ Docker installation via yum failed"
+            fi
             
           elif command -v apk &> /dev/null; then
             echo "📱 Using apk (Alpine Linux)..."
             
-            # Update package index
-            $SUDO apk update
-            
             # Install Docker
-            $SUDO apk add docker docker-compose
+            if $SUDO apk update && $SUDO apk add docker docker-compose; then
+              DOCKER_INSTALLED=true
+              echo "✅ Docker installed via apk"
+            else
+              echo "⚠️ Docker installation via apk failed"
+            fi
             
           else
-            echo "⚠️ No supported package manager found - trying binary installation..."
+            echo "⚠️ No supported package manager found - will try binary installation"
+          fi
+          
+          # If package manager installation failed, try binary installation
+          if [ "$DOCKER_INSTALLED" = "false" ]; then
+            echo "📦 Trying binary installation..."
             
             # Install Docker from binary
             DOCKER_VERSION="24.0.7"
             echo "📦 Downloading Docker ${DOCKER_VERSION} binaries..."
             
-            # Download and install Docker binaries
-            curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz | tar xz
-            $SUDO mv docker/* /usr/local/bin/
-            rm -rf docker
-            
-            # Create docker group
-            $SUDO groupadd docker 2>/dev/null || true
-            
-            echo "✅ Docker binaries installed"
+            if curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz | tar xz; then
+              # Move binaries to PATH
+              if [ -d "docker" ]; then
+                $SUDO mkdir -p /usr/local/bin
+                $SUDO mv docker/* /usr/local/bin/
+                $SUDO chmod +x /usr/local/bin/docker*
+                rm -rf docker
+                
+                # Add to PATH if not already there
+                export PATH="/usr/local/bin:$PATH"
+                echo "export PATH=\"/usr/local/bin:$PATH\"" >> ~/.bashrc
+                
+                # Create docker group
+                $SUDO groupadd docker 2>/dev/null || true
+                
+                DOCKER_INSTALLED=true
+                echo "✅ Docker binaries installed to /usr/local/bin"
+              else
+                echo "❌ Docker binary extraction failed"
+              fi
+            else
+              echo "❌ Failed to download Docker binaries"
+            fi
           fi
           
-          # Start Docker service (if systemctl is available)
-          if command -v systemctl &> /dev/null; then
-            $SUDO systemctl start docker 2>/dev/null || echo "⚠️ Could not start docker service - may already be running"
-            $SUDO systemctl enable docker 2>/dev/null || echo "⚠️ Could not enable docker service"
-          else
-            echo "ℹ️ systemctl not available - Docker daemon will be started manually if needed"
+          # Verify Docker installation
+          if [ "$DOCKER_INSTALLED" = "true" ]; then
+            if command -v docker &> /dev/null; then
+              echo "✅ Docker command is available"
+              docker --version 2>/dev/null || echo "⚠️ Docker version check failed but command exists"
+            else
+              echo "❌ Docker command not found after installation"
+              DOCKER_INSTALLED=false
+            fi
           fi
           
-          echo "✅ Docker installation completed"
-          docker --version 2>/dev/null || echo "⚠️ Docker version check failed - daemon may need to be started manually"
+          if [ "$DOCKER_INSTALLED" = "false" ]; then
+            echo "❌ All Docker installation methods failed"
+            exit 1
+          fi
+          
+          echo "✅ Docker installation completed successfully"
         fi
       shell: bash
       
     - name: Set up Docker Buildx
       run: |
         echo "🐳 Setting up Docker Buildx..."
+        
+        # Ensure Docker binaries are in PATH
+        export PATH="/usr/local/bin:$PATH"
+        
+        # Verify Docker client is available
+        if ! command -v docker &> /dev/null; then
+          echo "❌ Docker command not found in PATH"
+          echo "PATH: $PATH"
+          exit 1
+        fi
+        
+        # Check Docker version to confirm installation
+        echo "📋 Docker version:"
+        docker --version
         
         # Check if Docker daemon is running, start if needed
         if ! docker info &> /dev/null; then
@@ -187,41 +248,32 @@ jobs:
               echo "✅ Docker service is already active"
             else
               echo "🔄 Starting Docker service with systemctl..."
-              systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - trying manual start"
+              if command -v sudo &> /dev/null && [ "$(id -u)" != "0" ]; then
+                sudo systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - may need manual start"
+              else
+                systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - may need manual start"
+              fi
             fi
           else
-            echo "ℹ️ systemctl not available - using manual Docker daemon start"
+            echo "ℹ️ systemctl not available"
           fi
           
-          # If systemctl failed or isn't available, try manual start
+          # Wait a moment for the daemon to start
+          sleep 3
+          
+          # Final check - if still not running, we have an issue
           if ! docker info &> /dev/null; then
-            echo "🔄 Starting Docker daemon manually..."
-            
-            # Kill any existing dockerd processes
-            pkill dockerd 2>/dev/null || true
-            
-            # Start dockerd in background
-            dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 > /tmp/dockerd.log 2>&1 &
-            
-            # Wait for Docker daemon to start
-            echo "⏳ Waiting for Docker daemon to start..."
-            for i in {1..30}; do
-              if docker info &> /dev/null; then
-                echo "✅ Docker daemon is now running"
-                break
-              fi
-              echo "  Attempt $i/30..."
-              sleep 2
-            done
-            
-            # Final check
-            if ! docker info &> /dev/null; then
-              echo "❌ Failed to start Docker daemon"
-              echo "Docker daemon log:"
-              tail -20 /tmp/dockerd.log || echo "No log available"
-              exit 1
-            fi
+            echo "❌ Docker daemon is not running and couldn't be started"
+            echo "Debugging information:"
+            echo "- Docker binary: $(command -v docker || echo 'NOT FOUND')"
+            echo "- Docker version: $(docker --version || echo 'FAILED')"
+            echo "- System info: $(uname -a)"
+            echo "- Available services: $(systemctl list-units --type=service | grep docker || echo 'No docker services found')"
+            exit 1
           fi
+        else
+          echo "✅ Docker daemon is already running"
+        fi
         else
           echo "✅ Docker daemon is already running"
         fi
@@ -420,6 +472,20 @@ jobs:
       run: |
         echo "🐳 Setting up Docker Buildx for GPU variant ${{ matrix.gfx_arch }}..."
         
+        # Ensure Docker binaries are in PATH
+        export PATH="/usr/local/bin:$PATH"
+        
+        # Verify Docker client is available
+        if ! command -v docker &> /dev/null; then
+          echo "❌ Docker command not found in PATH"
+          echo "PATH: $PATH"
+          exit 1
+        fi
+        
+        # Check Docker version to confirm installation
+        echo "📋 Docker version:"
+        docker --version
+        
         # Check if Docker daemon is running, start if needed
         if ! docker info &> /dev/null; then
           echo "🔄 Docker daemon not running - attempting to start..."
@@ -430,40 +496,28 @@ jobs:
               echo "✅ Docker service is already active"
             else
               echo "🔄 Starting Docker service with systemctl..."
-              systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - trying manual start"
+              if command -v sudo &> /dev/null && [ "$(id -u)" != "0" ]; then
+                sudo systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - may need manual start"
+              else
+                systemctl start docker 2>/dev/null || echo "⚠️ systemctl start failed - may need manual start"
+              fi
             fi
           else
-            echo "ℹ️ systemctl not available - using manual Docker daemon start"
+            echo "ℹ️ systemctl not available"
           fi
           
-          # If systemctl failed or isn't available, try manual start
+          # Wait a moment for the daemon to start
+          sleep 3
+          
+          # Final check - if still not running, we have an issue
           if ! docker info &> /dev/null; then
-            echo "🔄 Starting Docker daemon manually..."
-            
-            # Kill any existing dockerd processes
-            pkill dockerd 2>/dev/null || true
-            
-            # Start dockerd in background
-            dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2376 > /tmp/dockerd-${{ matrix.gfx_arch }}.log 2>&1 &
-            
-            # Wait for Docker daemon to start
-            echo "⏳ Waiting for Docker daemon to start..."
-            for i in {1..30}; do
-              if docker info &> /dev/null; then
-                echo "✅ Docker daemon is now running"
-                break
-              fi
-              echo "  Attempt $i/30..."
-              sleep 2
-            done
-            
-            # Final check
-            if ! docker info &> /dev/null; then
-              echo "❌ Failed to start Docker daemon"
-              echo "Docker daemon log:"
-              tail -20 /tmp/dockerd-${{ matrix.gfx_arch }}.log || echo "No log available"
-              exit 1
-            fi
+            echo "❌ Docker daemon is not running and couldn't be started"
+            echo "Debugging information:"
+            echo "- Docker binary: $(command -v docker || echo 'NOT FOUND')"
+            echo "- Docker version: $(docker --version || echo 'FAILED')"
+            echo "- System info: $(uname -a)"
+            echo "- Available services: $(systemctl list-units --type=service | grep docker || echo 'No docker services found')"
+            exit 1
           fi
         else
           echo "✅ Docker daemon is already running"
