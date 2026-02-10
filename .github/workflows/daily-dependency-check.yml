@@ -1,0 +1,326 @@
+name: Daily Dependency Update Check
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC (after the daily build completes)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  REGISTRY: docker.io
+  REGISTRY_USER: getterup
+
+jobs:
+  check-base-images:
+    runs-on: ubuntu-latest
+    outputs:
+      updates_available: ${{ steps.check.outputs.updates_available }}
+      update_summary: ${{ steps.check.outputs.summary }}
+      
+    steps:
+    - name: Checkout repository
+      run: |
+        echo "🔄 Checking out repository..."
+        rm -rf /tmp/repo-check
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo-check
+        cp -r /tmp/repo-check/. ${{ github.workspace }}
+      shell: bash
+      
+    - name: Check Ubuntu base image updates
+      id: check-ubuntu
+      run: |
+        echo "🔍 Checking Ubuntu base image updates..."
+        
+        # Get current Ubuntu version from Dockerfiles
+        CURRENT_UBUNTU=$(grep -E "^FROM.*ubuntu:" Dockerfiles/Dockerfile.comfyui-rocm7.1 | head -1 | cut -d: -f2 | cut -d' ' -f1)
+        echo "Current Ubuntu version: $CURRENT_UBUNTU"
+        
+        # Check latest Ubuntu LTS digest
+        LATEST_DIGEST=$(docker manifest inspect ubuntu:$CURRENT_UBUNTU 2>/dev/null | grep -oP '"digest":\s*"\K[^"]+' | head -1)
+        
+        if [ -n "$LATEST_DIGEST" ]; then
+          echo "✅ Latest Ubuntu $CURRENT_UBUNTU digest: $LATEST_DIGEST"
+          echo "ubuntu_version=$CURRENT_UBUNTU" >> $GITHUB_OUTPUT
+          echo "ubuntu_digest=$LATEST_DIGEST" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Could not fetch Ubuntu digest"
+        fi
+      shell: bash
+      
+    - name: Check ROCm base image updates
+      id: check-rocm
+      run: |
+        echo "🔍 Checking ROCm base image updates..."
+        
+        # Check for latest ROCm releases
+        ROCM_VERSION="7.1"
+        
+        # Query Docker Hub for ROCm base image tags
+        echo "Checking rocm/pytorch and rocm/dev-ubuntu images..."
+        
+        # Check if newer ROCm versions are available
+        ROCM_LATEST=$(curl -s "https://registry.hub.docker.com/v2/repositories/rocm/pytorch/tags?page_size=100" | grep -oP '"name":\s*"\K[0-9]+\.[0-9]+' | sort -V | tail -1 || echo "7.1")
+        
+        echo "Current ROCm version: $ROCM_VERSION"
+        echo "Latest ROCm version: $ROCM_LATEST"
+        
+        echo "rocm_current=$ROCM_VERSION" >> $GITHUB_OUTPUT
+        echo "rocm_latest=$ROCM_LATEST" >> $GITHUB_OUTPUT
+        
+        if [ "$ROCM_VERSION" != "$ROCM_LATEST" ]; then
+          echo "update_available=true" >> $GITHUB_OUTPUT
+          echo "⚠️ New ROCm version available: $ROCM_LATEST"
+        else
+          echo "update_available=false" >> $GITHUB_OUTPUT
+          echo "✅ ROCm version is up to date"
+        fi
+      shell: bash
+      
+    - name: Check Python package updates
+      id: check-python
+      run: |
+        echo "🔍 Checking Python package updates..."
+        
+        # Install pip-outdated or use pip list --outdated
+        pip install pip-check 2>/dev/null || true
+        
+        # Check key packages mentioned in Dockerfiles
+        PACKAGES="torch torchvision torchaudio numpy pillow opencv-python requests"
+        
+        echo "Checking packages: $PACKAGES"
+        
+        OUTDATED=""
+        for pkg in $PACKAGES; do
+          LATEST=$(pip index versions "$pkg" 2>/dev/null | grep -oP "Available versions: \K[^,]+" | head -1 || echo "unknown")
+          if [ "$LATEST" != "unknown" ]; then
+            echo "  $pkg: latest=$LATEST"
+            OUTDATED="$OUTDATED\n- $pkg: $LATEST"
+          fi
+        done
+        
+        echo "package_updates<<EOF" >> $GITHUB_OUTPUT
+        echo -e "$OUTDATED" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+      shell: bash
+      
+    - name: Check ComfyUI updates
+      id: check-comfyui
+      run: |
+        echo "🔍 Checking ComfyUI repository updates..."
+        
+        # Get latest ComfyUI commit
+        LATEST_COMMIT=$(curl -s "https://api.github.com/repos/comfyanonymous/ComfyUI/commits/master" | grep -oP '"sha":\s*"\K[^"]+' | head -1)
+        
+        if [ -n "$LATEST_COMMIT" ]; then
+          echo "Latest ComfyUI commit: ${LATEST_COMMIT:0:7}"
+          echo "comfyui_commit=${LATEST_COMMIT:0:7}" >> $GITHUB_OUTPUT
+          echo "comfyui_full_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Could not fetch ComfyUI latest commit"
+        fi
+      shell: bash
+      
+    - name: Check stable-diffusion.cpp updates
+      id: check-sd-cpp
+      run: |
+        echo "🔍 Checking stable-diffusion.cpp repository updates..."
+        
+        # Get latest stable-diffusion.cpp commit
+        LATEST_COMMIT=$(curl -s "https://api.github.com/repos/leejet/stable-diffusion.cpp/commits/master" | grep -oP '"sha":\s*"\K[^"]+' | head -1)
+        
+        if [ -n "$LATEST_COMMIT" ]; then
+          echo "Latest stable-diffusion.cpp commit: ${LATEST_COMMIT:0:7}"
+          echo "sd_cpp_commit=${LATEST_COMMIT:0:7}" >> $GITHUB_OUTPUT
+          echo "sd_cpp_full_commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Could not fetch stable-diffusion.cpp latest commit"
+        fi
+      shell: bash
+      
+    - name: Check hip-pytorch updates  
+      id: check-hip-pytorch
+      run: |
+        echo "🔍 Checking ROCm/pytorch repository updates..."
+        
+        # Get latest ROCm pytorch release
+        LATEST_RELEASE=$(curl -s "https://api.github.com/repos/ROCm/pytorch/releases/latest" | grep -oP '"tag_name":\s*"\K[^"]+')
+        
+        if [ -n "$LATEST_RELEASE" ]; then
+          echo "Latest ROCm PyTorch release: $LATEST_RELEASE"
+          echo "hip_pytorch_release=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+        else
+          echo "⚠️ Could not fetch ROCm PyTorch latest release"
+          # Try getting latest tag instead
+          LATEST_TAG=$(curl -s "https://api.github.com/repos/ROCm/pytorch/tags" | grep -oP '"name":\s*"\K[^"]+' | head -1)
+          echo "Latest ROCm PyTorch tag: $LATEST_TAG"
+          echo "hip_pytorch_release=$LATEST_TAG" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+      
+    - name: Compile update summary
+      id: check
+      run: |
+        echo "📊 Compiling dependency update summary..."
+        
+        SUMMARY="# Dependency Update Check - $(date +'%Y-%m-%d')\n\n"
+        UPDATES_AVAILABLE=false
+        
+        # ROCm Updates
+        if [ "${{ steps.check-rocm.outputs.update_available }}" == "true" ]; then
+          UPDATES_AVAILABLE=true
+          SUMMARY="${SUMMARY}## 🔴 ROCm Updates Available\n"
+          SUMMARY="${SUMMARY}- Current: ${{ steps.check-rocm.outputs.rocm_current }}\n"
+          SUMMARY="${SUMMARY}- Latest: ${{ steps.check-rocm.outputs.rocm_latest }}\n\n"
+        else
+          SUMMARY="${SUMMARY}## ✅ ROCm Version\n"
+          SUMMARY="${SUMMARY}- Version: ${{ steps.check-rocm.outputs.rocm_current }} (up to date)\n\n"
+        fi
+        
+        # Ubuntu Base Image
+        SUMMARY="${SUMMARY}## 📦 Base Images\n"
+        SUMMARY="${SUMMARY}- Ubuntu: ${{ steps.check-ubuntu.outputs.ubuntu_version }}\n"
+        SUMMARY="${SUMMARY}- Digest: \`${{ steps.check-ubuntu.outputs.ubuntu_digest }}\`\n\n"
+        
+        # ComfyUI
+        SUMMARY="${SUMMARY}## 🎨 ComfyUI\n"
+        SUMMARY="${SUMMARY}- Latest commit: \`${{ steps.check-comfyui.outputs.comfyui_commit }}\`\n\n"
+        
+        # stable-diffusion.cpp
+        SUMMARY="${SUMMARY}## 🖼️ stable-diffusion.cpp\n"
+        SUMMARY="${SUMMARY}- Latest commit: \`${{ steps.check-sd-cpp.outputs.sd_cpp_commit }}\`\n\n"
+        
+        # ROCm PyTorch
+        SUMMARY="${SUMMARY}## 🔥 ROCm PyTorch\n"
+        SUMMARY="${SUMMARY}- Latest release: ${{ steps.check-hip-pytorch.outputs.hip_pytorch_release }}\n\n"
+        
+        # Python packages
+        if [ -n "${{ steps.check-python.outputs.package_updates }}" ]; then
+          SUMMARY="${SUMMARY}## 🐍 Python Packages\n"
+          SUMMARY="${SUMMARY}Latest versions available:\n"
+          SUMMARY="${SUMMARY}${{ steps.check-python.outputs.package_updates }}\n\n"
+        fi
+        
+        echo "updates_available=$UPDATES_AVAILABLE" >> $GITHUB_OUTPUT
+        echo "summary<<EOF" >> $GITHUB_OUTPUT
+        echo -e "$SUMMARY" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        echo -e "\n$SUMMARY"
+      shell: bash
+      
+    - name: Create summary
+      run: |
+        echo "${{ steps.check.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
+      shell: bash
+
+  check-security-updates:
+    runs-on: ubuntu-latest
+    needs: check-base-images
+    
+    steps:
+    - name: Checkout repository
+      run: |
+        echo "🔄 Checking out repository..."
+        rm -rf /tmp/repo-security
+        git clone --depth=1 ${{ github.server_url }}/${{ github.repository }} /tmp/repo-security
+        cp -r /tmp/repo-security/. ${{ github.workspace }}
+      shell: bash
+      
+    - name: Check for GitHub security advisories
+      run: |
+        echo "🔒 Checking for security advisories..."
+        
+        # Check if repository has any security advisories
+        ADVISORIES=$(curl -s -H "Accept: application/vnd.github+json" \
+          "https://api.github.com/repos/${{ github.repository }}/security-advisories" || echo "[]")
+        
+        ADVISORY_COUNT=$(echo "$ADVISORIES" | grep -c "ghsa_id" || echo "0")
+        
+        echo "Security advisories found: $ADVISORY_COUNT"
+        
+        if [ "$ADVISORY_COUNT" -gt 0 ]; then
+          echo "⚠️ Security advisories detected"
+          echo "$ADVISORIES"
+        else
+          echo "✅ No security advisories found"
+        fi
+      shell: bash
+      
+    - name: Check for CVEs in base images
+      run: |
+        echo "🔍 Checking for CVEs in base images..."
+        
+        # This would normally use Trivy or similar tool
+        # For now, just report that security scanning should be done
+        echo "ℹ️ Run the security-scan workflow for detailed vulnerability scanning"
+        echo "ℹ️ Consider running: docker scout cves <image-name>"
+      shell: bash
+
+  create-issue-if-updates:
+    runs-on: ubuntu-latest
+    needs: check-base-images
+    if: needs.check-base-images.outputs.updates_available == 'true'
+    
+    steps:
+    - name: Create issue for updates
+      run: |
+        echo "📝 Creating GitHub issue for available updates..."
+        
+        ISSUE_TITLE="[Dependency Update] Updates Available - $(date +'%Y-%m-%d')"
+        ISSUE_BODY="${{ needs.check-base-images.outputs.update_summary }}"
+        
+        # Add action items to the issue
+        ISSUE_BODY="${ISSUE_BODY}\n\n---\n\n## ✅ Action Items\n\n"
+        ISSUE_BODY="${ISSUE_BODY}- [ ] Review the updates above\n"
+        ISSUE_BODY="${ISSUE_BODY}- [ ] Update Dockerfiles if necessary\n"
+        ISSUE_BODY="${ISSUE_BODY}- [ ] Test updated images\n"
+        ISSUE_BODY="${ISSUE_BODY}- [ ] Update documentation\n"
+        ISSUE_BODY="${ISSUE_BODY}- [ ] Close this issue when complete\n"
+        
+        # Create issue using GitHub CLI or API
+        # Note: Requires GITHUB_TOKEN with issues:write permission
+        
+        curl -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues" \
+          -d "{
+            \"title\": \"$ISSUE_TITLE\",
+            \"body\": $(echo -e "$ISSUE_BODY" | jq -Rs .),
+            \"labels\": [\"dependencies\", \"automated\"]
+          }" || echo "⚠️ Failed to create issue - check token permissions"
+        
+        echo "✅ Issue created or update attempted"
+      shell: bash
+
+  notify-summary:
+    runs-on: ubuntu-latest
+    needs: [check-base-images, check-security-updates]
+    if: always()
+    
+    steps:
+    - name: Daily check summary
+      run: |
+        echo "📊 Daily Dependency Check Summary"
+        echo "=================================="
+        echo ""
+        echo "Date: $(date +'%Y-%m-%d %H:%M:%S UTC')"
+        echo "Repository: ${{ github.repository }}"
+        echo ""
+        echo "🔧 Check Results:"
+        echo "- Base Images Check: ${{ needs.check-base-images.result }}"
+        echo "- Security Check: ${{ needs.check-security-updates.result }}"
+        echo ""
+        
+        if [ "${{ needs.check-base-images.outputs.updates_available }}" == "true" ]; then
+          echo "⚠️ Updates are available - issue created"
+          echo ""
+          echo "📋 Summary:"
+          echo "${{ needs.check-base-images.outputs.update_summary }}"
+        else
+          echo "✅ All dependencies are up to date"
+        fi
+        
+        echo ""
+        echo "🔗 View full results: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      shell: bash

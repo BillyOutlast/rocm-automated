@@ -1,0 +1,339 @@
+name: Nightly Docker Image Build
+
+on:
+  schedule:
+    # Run every night at 2:00 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      skip_push:
+        description: 'Skip pushing to registry (build only)'
+        required: false
+        type: boolean
+        default: false
+      target_images:
+        description: 'Images to build (comma-separated: comfyui,sd-cpp,variants or "all")'
+        required: false
+        default: 'all'
+
+env:
+  REGISTRY: docker.io
+  REGISTRY_USER: getterup
+  ROCM_VERSION: "7.1"
+
+jobs:
+  # Generate build matrix and metadata
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.meta.outputs.date }}
+      sha: ${{ steps.meta.outputs.sha }}
+      build_comfyui: ${{ steps.filter.outputs.build_comfyui }}
+      build_sd_cpp: ${{ steps.filter.outputs.build_sd_cpp }}
+      build_variants: ${{ steps.filter.outputs.build_variants }}
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          
+      - name: Generate metadata
+        id: meta
+        run: |
+          echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "timestamp=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          
+      - name: Determine build targets
+        id: filter
+        run: |
+          TARGET="${{ github.event.inputs.target_images || 'all' }}"
+          
+          if [[ "$TARGET" == "all" ]]; then
+            echo "build_comfyui=true" >> $GITHUB_OUTPUT
+            echo "build_sd_cpp=true" >> $GITHUB_OUTPUT
+            echo "build_variants=true" >> $GITHUB_OUTPUT
+          else
+            [[ "$TARGET" == *"comfyui"* ]] && echo "build_comfyui=true" >> $GITHUB_OUTPUT || echo "build_comfyui=false" >> $GITHUB_OUTPUT
+            [[ "$TARGET" == *"sd-cpp"* ]] && echo "build_sd_cpp=true" >> $GITHUB_OUTPUT || echo "build_sd_cpp=false" >> $GITHUB_OUTPUT
+            [[ "$TARGET" == *"variants"* ]] && echo "build_variants=true" >> $GITHUB_OUTPUT || echo "build_variants=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Build ComfyUI image
+  build-comfyui:
+    needs: prepare
+    if: needs.prepare.outputs.build_comfyui == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Docker Hub
+        if: github.event_name == 'schedule' || github.event.inputs.skip_push != 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/comfyui-rocm${{ env.ROCM_VERSION }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ needs.prepare.outputs.date }}
+            type=raw,value=nightly
+            type=sha,prefix=git-
+            
+      - name: Build and push ComfyUI
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfiles/Dockerfile.comfyui-rocm${{ env.ROCM_VERSION }}
+          platforms: linux/amd64
+          push: ${{ github.event_name == 'schedule' || github.event.inputs.skip_push != 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_DATE=${{ needs.prepare.outputs.date }}
+            VCS_REF=${{ needs.prepare.outputs.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/comfyui-rocm${{ env.ROCM_VERSION }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/comfyui-rocm${{ env.ROCM_VERSION }}:buildcache,mode=max
+
+  # Build Stable Diffusion base image
+  build-stable-diffusion:
+    needs: prepare
+    if: needs.prepare.outputs.build_sd_cpp == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Docker Hub
+        if: github.event_name == 'schedule' || github.event.inputs.skip_push != 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion.cpp-rocm${{ env.ROCM_VERSION }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ needs.prepare.outputs.date }}
+            type=raw,value=nightly
+            type=sha,prefix=git-
+            
+      - name: Build and push Stable Diffusion
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfiles/Dockerfile.stable-diffusion.cpp-rocm${{ env.ROCM_VERSION }}
+          platforms: linux/amd64
+          push: ${{ github.event_name == 'schedule' || github.event.inputs.skip_push != 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_DATE=${{ needs.prepare.outputs.date }}
+            VCS_REF=${{ needs.prepare.outputs.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion.cpp-rocm${{ env.ROCM_VERSION }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion.cpp-rocm${{ env.ROCM_VERSION }}:buildcache,mode=max
+
+  # Build GPU-specific variants
+  build-gpu-variants:
+    needs: prepare
+    if: needs.prepare.outputs.build_variants == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        gfx_arch:
+          - gfx1150  # RDNA 3.5 (Ryzen AI 9 HX 370)
+          - gfx1151  # RDNA 3.5 (Strix Point)
+          - gfx1200  # RDNA 4 (RX 9070 XT)
+          - gfx1201  # RDNA 4 (RX 9060 XT)
+          - gfx1100  # RDNA 3 (RX 7900 XTX/XT)
+          - gfx1101  # RDNA 3 (RX 7800 XT)
+          - gfx1030  # RDNA 2 (RX 6000 series)
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to Docker Hub
+        if: github.event_name == 'schedule' || github.event.inputs.skip_push != 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion-cpp-${{ matrix.gfx_arch }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ needs.prepare.outputs.date }}
+            type=raw,value=nightly
+            type=sha,prefix=git-
+            
+      - name: Build and push ${{ matrix.gfx_arch }} variant
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfiles/Dockerfile.stable-diffusion.cpp-rocm${{ env.ROCM_VERSION }}
+          platforms: linux/amd64
+          push: ${{ github.event_name == 'schedule' || github.event.inputs.skip_push != 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            GFX_ARCH=${{ matrix.gfx_arch }}
+            BUILD_DATE=${{ needs.prepare.outputs.date }}
+            VCS_REF=${{ needs.prepare.outputs.sha }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion-cpp-${{ matrix.gfx_arch }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion-cpp-${{ matrix.gfx_arch }}:buildcache,mode=max
+
+  # Test built images
+  test-images:
+    needs: [prepare, build-comfyui, build-stable-diffusion]
+    if: always() && (needs.build-comfyui.result == 'success' || needs.build-stable-diffusion.result == 'success')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Test image availability
+        run: |
+          echo "🔍 Testing image availability..."
+          
+          IMAGES_TO_TEST=()
+          
+          if [[ "${{ needs.build-comfyui.result }}" == "success" ]]; then
+            IMAGES_TO_TEST+=("${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/comfyui-rocm${{ env.ROCM_VERSION }}:${{ needs.prepare.outputs.date }}")
+          fi
+          
+          if [[ "${{ needs.build-stable-diffusion.result }}" == "success" ]]; then
+            IMAGES_TO_TEST+=("${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion.cpp-rocm${{ env.ROCM_VERSION }}:${{ needs.prepare.outputs.date }}")
+          fi
+          
+          for image in "${IMAGES_TO_TEST[@]}"; do
+            echo "Checking: $image"
+            if docker manifest inspect "$image" >/dev/null 2>&1; then
+              echo "✅ $image is available"
+            else
+              echo "❌ $image is NOT available"
+              exit 1
+            fi
+          done
+          
+      - name: Test Docker Compose
+        run: |
+          echo "📋 Validating Docker Compose configuration..."
+          
+          # Create test directories
+          mkdir -p User-Directories/{open-webui,ollama,comfyui}
+          
+          # Validate compose file
+          if [ -f "docker-compose.yaml" ]; then
+            docker compose config --quiet
+            echo "✅ Docker Compose configuration is valid"
+          else
+            echo "⚠️ docker-compose.yaml not found, skipping validation"
+          fi
+
+  # Build summary and notifications
+  notify:
+    needs: [prepare, build-comfyui, build-stable-diffusion, build-gpu-variants, test-images]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Generate build summary
+        run: |
+          echo "# 🌙 Nightly Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Date:** ${{ needs.prepare.outputs.date }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Git SHA:** \`${{ needs.prepare.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## 📊 Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ComfyUI | ${{ needs.build-comfyui.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Stable Diffusion | ${{ needs.build-stable-diffusion.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| GPU Variants | ${{ needs.build-gpu-variants.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Image Tests | ${{ needs.test-images.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count successes
+          SUCCESS_COUNT=0
+          [[ "${{ needs.build-comfyui.result }}" == "success" ]] && ((SUCCESS_COUNT++))
+          [[ "${{ needs.build-stable-diffusion.result }}" == "success" ]] && ((SUCCESS_COUNT++))
+          [[ "${{ needs.build-gpu-variants.result }}" == "success" ]] && ((SUCCESS_COUNT++))
+          
+          if [[ $SUCCESS_COUNT -eq 3 ]]; then
+            echo "## ✅ All Builds Successful!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All nightly images have been built and pushed successfully." >> $GITHUB_STEP_SUMMARY
+          elif [[ $SUCCESS_COUNT -gt 0 ]]; then
+            echo "## ⚠️ Partial Success" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "$SUCCESS_COUNT out of 3 builds completed successfully." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Build Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All builds failed. Please check the logs above." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🐳 Published Images" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Images are available at:" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/comfyui-rocm${{ env.ROCM_VERSION }}:${{ needs.prepare.outputs.date }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion.cpp-rocm${{ env.ROCM_VERSION }}:${{ needs.prepare.outputs.date }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.REGISTRY }}/${{ env.REGISTRY_USER }}/stable-diffusion-cpp-{gfx_arch}:${{ needs.prepare.outputs.date }}\`" >> $GITHUB_STEP_SUMMARY
+          
+      - name: Check for failures
+        if: needs.build-comfyui.result == 'failure' || needs.build-stable-diffusion.result == 'failure' || needs.build-gpu-variants.result == 'failure'
+        run: |
+          echo "::error::One or more nightly builds failed"
+          exit 1
+
+  # Cleanup old images (optional)
+  cleanup:
+    needs: [prepare, build-comfyui, build-stable-diffusion, build-gpu-variants]
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Clean up old nightly tags
+        run: |
+          echo "🧹 Cleanup job placeholder"
+          echo "Consider implementing cleanup of old nightly tags (>30 days)"
+          echo "This helps keep your registry organized and saves storage space"
+          
+          # Example: Use Docker Hub API or tools like 'regctl' to remove old tags
+          # For now, this is a placeholder for future implementation

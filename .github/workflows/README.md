@@ -2,11 +2,38 @@
 
 This directory contains GitHub Actions workflows for automated building, testing, and releasing of the ROCm 7.1 container environment.
 
+## 🎯 Quick Reference
+
+**Which workflow should I use?**
+
+- 🌙 **Nightly automated builds**: Use `nightly-build.yml` (recommended)
+- 🔒 **Self-hosted/restricted environments**: Use `daily-build-pure-shell.yml`
+- 🔍 **Check for updates**: Use `daily-dependency-check.yml`
+- 📦 **Production releases**: Use `release.yml`
+- 🛡️ **Security scanning**: Use `security-scan-pure-shell.yml`
+
 ## 🔧 Workflows
 
-### 1. Daily Build (`daily-build.yml`)
+### 1. Nightly Build (`nightly-build.yml`) ⭐ **Recommended**
+- **Schedule**: Runs nightly at 02:00 UTC
+- **Purpose**: Automated nightly builds with optimized caching
+- **Triggers**: 
+  - Nightly schedule
+  - Manual dispatch with selective build options
+- **What it builds**:
+  - ComfyUI ROCm image
+  - Stable Diffusion.cpp base image
+  - 7 GPU-specific variants (gfx1030-gfx1201)
+- **Features**:
+  - Uses official Docker actions for better performance
+  - Registry-based layer caching
+  - Automated testing and validation
+  - Detailed build summaries
+  - Selective builds (can build specific images)
+
+### 2. Daily Build Pure Shell (`daily-build-pure-shell.yml`)
 - **Schedule**: Runs daily at 02:00 UTC
-- **Purpose**: Automated builds of all container images
+- **Purpose**: Pure shell-based builds (no GitHub Actions marketplace)
 - **Triggers**: 
   - Daily schedule
   - Manual dispatch with options
@@ -14,8 +41,23 @@ This directory contains GitHub Actions workflows for automated building, testing
   - Base images (ComfyUI, Stable Diffusion.cpp)
   - GPU-specific variants for different AMD architectures
   - Tests Docker Compose configuration
+- **Use case**: For self-hosted runners or restricted environments
 
-### 2. Release Build (`release.yml`)
+### 3. Daily Dependency Check (`daily-dependency-check.yml`)
+- **Schedule**: Runs daily at 06:00 UTC (after builds)
+- **Purpose**: Monitor upstream dependencies for updates
+- **Checks**:
+  - ROCm version updates
+  - Ubuntu base image updates
+  - ComfyUI repository commits
+  - Stable Diffusion.cpp updates
+  - Python package versions
+  - Security advisories
+- **Features**:
+  - Automatically creates GitHub issues when updates are found
+  - Provides actionable update checklists
+
+### 4. Release Build (`release.yml`)
 - **Triggers**: 
   - Git tags matching `v*.*.*`
   - Manual dispatch with version input
@@ -26,7 +68,7 @@ This directory contains GitHub Actions workflows for automated building, testing
   - Multi-architecture GPU support
   - Docker Hub image publishing
 
-### 3. Security Scan (`security-scan.yml`)
+### 5. Security Scan (`security-scan-pure-shell.yml`)
 - **Schedule**: Weekly on Sundays at 03:00 UTC
 - **Purpose**: Security and vulnerability scanning
 - **Includes**:
@@ -92,15 +134,48 @@ Add these secrets in your GitHub repository settings:
 
 ## 🛠️ Manual Triggers
 
-### Daily Build Manual Run
+### Nightly Build Manual Run
+```bash
+# Via GitHub CLI - Build all images
+gh workflow run nightly-build.yml
+
+# Build only specific images
+gh workflow run nightly-build.yml \
+  -f target_images=comfyui,sd-cpp
+
+# Build without pushing (local builds only)
+gh workflow run nightly-build.yml \
+  -f skip_push=true
+
+# Build only GPU variants
+gh workflow run nightly-build.yml \
+  -f target_images=variants
+
+# Via GitHub UI
+# Go to Actions > Nightly Docker Image Build > Run workflow
+# Select options:
+#   - skip_push: false (to push to registry)
+#   - target_images: all (or specify: comfyui,sd-cpp,variants)
+```
+
+### Daily Build Pure Shell Manual Run
 ```bash
 # Via GitHub CLI
-gh workflow run daily-build.yml \
+gh workflow run daily-build-pure-shell.yml \
   -f push_images=true \
   -f build_all=true
 
 # Via GitHub UI
-# Go to Actions > Daily ROCm Container Build > Run workflow
+# Go to Actions > Daily ROCm Container Build (Pure Shell) > Run workflow
+```
+
+### Dependency Check Manual Run
+```bash
+# Via GitHub CLI
+gh workflow run daily-dependency-check.yml
+
+# Via GitHub UI
+# Go to Actions > Daily Dependency Update Check > Run workflow
 ```
 
 ### Release Manual Run
@@ -114,7 +189,7 @@ gh workflow run release.yml \
 ### Security Scan Manual Run
 ```bash
 # Run security scan
-gh workflow run security-scan.yml
+gh workflow run security-scan-pure-shell.yml
 ```
 
 ## 📈 Monitoring
